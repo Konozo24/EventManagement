@@ -9,23 +9,6 @@
 #include <limits>
 using namespace std;
 
-// ===== Helper: Build product summary string =====
-string buildProductSummary(const vector<Product>& selectedProducts, double& totalProductPrice) {
-    stringstream summary;
-    bool first = true;
-    totalProductPrice = 0.0;
-
-    for (const auto& p : selectedProducts) {
-        if (p.quantity > 0) {
-            if (!first) summary << ", ";
-            summary << p.name << " x " << p.quantity;
-            totalProductPrice += p.price * p.quantity;
-            first = false;
-        }
-    }
-    return summary.str();
-}
-
 // ===== Helper: Get next receipt number =====
 int getNextReceiptNumber() {
     ifstream in(RECEIPT_FILE);
@@ -42,73 +25,101 @@ int getNextReceiptNumber() {
 
 // ===== Helper: Save receipt to file =====
 void saveReceipt(const string& name, const string& eventName,
-                 const string& productSummary, int ticketAmount,
-                 double ticketPrice, double productPrice, const string& method) {
-
-    double total = (ticketAmount * ticketPrice) + productPrice;
+                 const vector<Product>& selectedProducts,
+                 int ticketAmount, double ticketPrice,
+                 const string& method) {
+    
+    double productTotal = 0.0;
 
     int receiptCount = getNextReceiptNumber();
     ofstream out(RECEIPT_FILE, ios::app);
+
     out << "Receipt #" << receiptCount << ":\n";
     out << "Name            : " << name << "\n";
     out << "Event           : " << eventName << "\n";
-    out << "Product         : " << (productSummary.empty() ? "None" : productSummary) << "\n";
-    out << "Ticket          : RM" << fixed << setprecision(2) << ticketPrice 
-        << " x " << ticketAmount << "\n";
-    out << "Product Total   : RM" << fixed << setprecision(2) << productPrice << "\n";
-    out << "Total           : RM" << fixed << setprecision(2) << total << "\n";
+
+    if (selectedProducts.empty()) {
+        out << "Product         : None\n";
+    } else {
+        for (const auto& p : selectedProducts) {
+            if (p.quantity > 0) {
+                double subtotal = p.price * p.quantity;
+                out << "Product         : " 
+                    << setw(12) << left << p.name 
+                    << " x " << p.quantity 
+                    << " = RM" << fixed << setprecision(2) << subtotal << "\n";
+                productTotal += subtotal;
+            }
+        }
+    }
+
+    double ticketTotal = ticketAmount * ticketPrice;
+    double grandTotal = ticketTotal + productTotal;
+
+    out << "Ticket          : RM" << fixed << setprecision(2) << ticketPrice
+        << " x " << ticketAmount 
+        << " = RM" << fixed << setprecision(2) << ticketTotal << "\n";
+    out << "Product Total   : RM" << fixed << setprecision(2) << productTotal << "\n";
+    out << "Total           : RM" << fixed << setprecision(2) << grandTotal << "\n";
     out << "Payment Method  : " << method << "\n";
     out << "----------------------------------\n\n";
+
     out.close();
 
     cout << "\nPayment successful! Receipt saved.\n";
 }
 
-// ===== Main: Checkout process =====
-void userCheckout(const string& name, const string& eventName,
-                  int ticketAmount, double ticketPrice,
-                  const vector<Product>& selectedProducts) {
-    double totalProductPrice;
-    string productSummary = buildProductSummary(selectedProducts, totalProductPrice);
-    double totalAmount = (ticketPrice * ticketAmount) + totalProductPrice;
 
-    // Handle case where user buys nothing
-    if (ticketAmount == 0 && selectedProducts.empty()) {
-        cout << "\nYou did not purchase tickets or products. Returning to menu...\n";
-        return;
-    }
-    
+// ===== Main: Checkout process =====
+void processPayment(const string& guestID) {
+    // 🔹 TODO: Replace with real lookup from registration.txt later
+    string name = "TEMP_NAME";
+    string eventName = "TEMP_EVENT";
+    int ticketAmount = 1;
+    double ticketPrice = 30.0;
+
+    vector<Product> products = { {"SmartWatch Pro", 299.0, 1} };
+
     cout << "\n--- Payment Summary ---\n";
+    cout << "Guest ID    : " << guestID << endl;
     cout << "Name        : " << name << endl;
     cout << "Event       : " << eventName << endl;
-    cout << "Tickets     : " << ticketAmount << " x RM" << fixed << setprecision(2)
-         << ticketPrice << " = RM" << ticketPrice * ticketAmount << endl;
+    
+    if (selectedProducts.empty()) {
+        cout << "Product         : None\n";
+    } else {
+        for (const auto& p : selectedProducts) {
+            if (p.quantity > 0) {
+                double subtotal = p.price * p.quantity;
+                cout << "Product         : " 
+                    << setw(12) << left << p.name 
+                    << " x " << p.quantity 
+                    << " = RM" << fixed << setprecision(2) << subtotal << "\n";
+                productTotal += subtotal;
+            }
+        }
+    }
 
-    if (!productSummary.empty())
-        cout << "Product     : " << productSummary << " = RM" << fixed << setprecision(2)
-             << totalProductPrice << endl;
-    else
-        cout << "Product     : None\n";
+    double ticketTotal = ticketAmount * ticketPrice;
+    double grandTotal = ticketTotal + productTotal;
 
-    cout << "Total       : RM" << fixed << setprecision(2) << totalAmount << endl;
+    cout << "Ticket          : RM" << fixed << setprecision(2) << ticketPrice
+        << " x " << ticketAmount 
+        << " = RM" << fixed << setprecision(2) << ticketTotal << "\n";
+    cout << "Product Total   : RM" << fixed << setprecision(2) << productTotal << "\n";
+    cout << "Total           : RM" << fixed << setprecision(2) << grandTotal << "\n";
 
     string method;
     cout << "\nChoose payment method (Cash / Credit / E-Wallet): ";
-    cin >> method;
+    getline(cin, method);
 
-    // Convert to uppercase
-    for (char& c : method) c = toupper(c);
-
-    if (method == "CASH" || method == "CREDIT" || method == "E-WALLET") {
-        saveReceipt(name, eventName, productSummary, ticketAmount, 
-                    ticketPrice, totalProductPrice, method);
-    }
-    else {
+    if (method == "Cash" || method == "Credit" || method == "E-Wallet") {
+        saveReceipt(name, eventName, products, ticketAmount, ticketPrice, method);
+    } else {
         cout << "\nInvalid payment method.\n";
     }
 
     cout << "\nPress Enter to return to menu...";
-    cin.ignore();
     cin.get();
     clearScreen();
 }
