@@ -3,22 +3,19 @@
 #define FEEDBACK_H
 
 #include <string>
+#include <vector>
+using namespace std;
 
-// Feedback structure
 struct Feedback {
-    std::string guestID;
-    std::string name;
-    std::string eventName;
+    string guestID;
+    string name;
+    string eventName;
     int rating;
-    std::string comment;
+    string comment;
 };
 
-// Core functions
+// Feedback functions
 void submitFeedback();
 void viewFeedback();
-
-// Helpers
-bool verifyGuest(const std::string& guestID, const std::string& name);
-int getNextFeedbackNumber();
 
 #endif
