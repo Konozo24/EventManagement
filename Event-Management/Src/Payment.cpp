@@ -72,20 +72,25 @@ void userCheckout(const string& name, const string& eventName,
     string productSummary = buildProductSummary(selectedProducts, totalProductPrice);
     double totalAmount = (ticketPrice * ticketAmount) + totalProductPrice;
 
+    // Handle case where user buys nothing
+    if (ticketAmount == 0 && selectedProducts.empty()) {
+        cout << "\nYou did not purchase tickets or products. Returning to menu...\n";
+        return;
+    }
+    
     cout << "\n--- Payment Summary ---\n";
     cout << "Name        : " << name << endl;
     cout << "Event       : " << eventName << endl;
-    cout << "Tickets     : " << ticketAmount << " x RM" << fixed 
-         << setprecision(2) << ticketPrice 
-         << " = RM" << ticketPrice * ticketAmount << endl;
+    cout << "Tickets     : " << ticketAmount << " x RM" << fixed << setprecision(2)
+         << ticketPrice << " = RM" << ticketPrice * ticketAmount << endl;
 
     if (!productSummary.empty())
-        cout << "Product     : " << productSummary << " = RM" 
-             << fixed << setprecision(2) << totalProductPrice << endl;
+        cout << "Product     : " << productSummary << " = RM" << fixed << setprecision(2)
+             << totalProductPrice << endl;
     else
         cout << "Product     : None\n";
 
-    cout << "Total       : RM" << totalAmount << endl;
+    cout << "Total       : RM" << fixed << setprecision(2) << totalAmount << endl;
 
     string method;
     cout << "\nChoose payment method (Cash / Credit / E-Wallet): ";
@@ -102,8 +107,9 @@ void userCheckout(const string& name, const string& eventName,
         cout << "\nInvalid payment method.\n";
     }
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // flush buffer
-    cin.get();     // Wait for Enter
+    cout << "\nPress Enter to return to menu...";
+    cin.ignore();
+    cin.get();
     clearScreen();
 }
 
@@ -122,6 +128,8 @@ void viewReceipts() {
     }
     in.close();
 
-    cin.get();     // Wait for Enter
+    cout << "\nPress Enter to return to menu...";
+    cin.ignore();
+    cin.get();
     clearScreen();
 }
