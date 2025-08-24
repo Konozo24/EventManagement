@@ -27,4 +27,7 @@ void loadGuestsFromFile();
 void displayRegisteredGuests();
 int validateGuestIDInput();
 
+// Extra utilities (for Payment & Feedback)
+bool verifyGuest(int guestID, const string& name);
+
 #endif
