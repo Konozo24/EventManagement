@@ -4,13 +4,8 @@
 
 #include <string>
 #include <vector>
+#include "Product.h"
 using namespace std;
-
-struct Product {
-    string name;
-    double price;
-    int quantity;
-};
 
 // Payment functions
 void userCheckout(const string& name, const string& eventName, int ticketAmount, double ticketPrice,
