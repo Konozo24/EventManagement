@@ -117,3 +117,12 @@ int validateGuestIDInput() {
     return guestID;
 }
 
+// Verify if Guest ID and Name match an existing guest
+bool verifyGuest(int guestID, const string& name) {
+    for (const auto& guest : guests) {
+        if (guest.guestID == guestID && guest.name == name) {
+            return true;
+        }
+    }
+    return false;
+}
