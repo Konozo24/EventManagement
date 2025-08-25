@@ -112,8 +112,6 @@ void saveReceipt(const string& name, const string& eventName,
     cout << "\nPayment successful! Receipt saved.\n";
 }
 
-
-// ===== Main: Checkout process =====
 void processPayment(const string& guestID) {
     // TODO: Replace with real lookup from registration.txt later
     string name = "TEMP_NAME";
@@ -170,7 +168,6 @@ void processPayment(const string& guestID) {
     clearScreen();
 }
 
-// ===== Main: View receipts =====
 void viewReceipts() {
     ifstream in(RECEIPT_FILE);
     if (!in) {
@@ -191,128 +188,65 @@ void viewReceipts() {
     clearScreen();
 }
 
-// ===== Feedback Struct =====
-struct Feedback {
-    string guestID;
-    string name;
-    string eventName;
-    int rating;
-    string comment;
-};
-
-// ===== Helper: Get next feedback number =====
-int getNextFeedbackNumber() {
-    ifstream in(FEEDBACK_FILE);
-    string line;
-    int lastNum = 0;
-
-    while (getline(in, line)) {
-        if (line.find("Feedback #") != string::npos) {
-            lastNum = stoi(line.substr(10));
-        }
-    }
-    return lastNum + 1;
-}
-
 // ===== FEEDBACK MODULE =====
 void submitFeedback() {
-    Feedback fb;
-    cout << "\n====== SUBMIT FEEDBACK ======\n";
+    string guestID, name, eventName, comment;
+    int rating;
 
-    cout << "Enter Guest ID: ";
-    getline(cin, fb.guestID);
-
+    cout << "\n====== Feedback ======";
+    cout << "\nEnter Guest ID: ";
+    cin >> guestID;
+    cin.ignore();
     cout << "Enter Name: ";
-    getline(cin, fb.name);
+    getline(cin, name);
+
+    // Verify Guest ID + Name
+    if (!verifyGuest(stoi(guestID), name)) {
+        cout << "Guest ID and Name do not match our records.\n";
+        return;
+    }
 
     cout << "Enter Event Name: ";
-    getline(cin, fb.eventName);
-
+    getline(cin, eventName);
     cout << "Enter Rating (1-5): ";
-    cin >> fb.rating;
-    cin.ignore();
+    cin >> rating;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Enter Comment: ";
-    getline(cin, fb.comment);
+    getline(cin, comment);
 
     int count = getNextFeedbackNumber();
     ofstream out(FEEDBACK_FILE, ios::app);
     out << "Feedback #" << count << ":\n"
-        << "Guest ID   : " << fb.guestID << "\n"
-        << "Name       : " << fb.name << "\n"
-        << "Event Name : " << fb.eventName << "\n"
-        << "Rating     : " << fb.rating << "/5\n"
-        << "Comment    : " << fb.comment << "\n"
+        << "Guest ID   : " << guestID << "\n"
+        << "Name       : " << name << "\n"
+        << "Event Name : " << eventName << "\n"
+        << "Rating     : " << rating << "/5\n"
+        << "Comment    : " << comment << "\n"
         << "----------------------------------\n\n";
     out.close();
 
-    cout << "\nFeedback submitted successfully!\n";
-    cout << "Press Enter to return to menu...";
-    cin.get();
+    cout << "\nFeedback submitted successfully.\n";
+
+    cin.get();     // Wait for Enter
     clearScreen();
 }
 
-// ===== View all feedback =====
 void viewFeedback() {
     ifstream in(FEEDBACK_FILE);
-    if (!in.is_open()) {
-        cout << "\nNo feedback records found.\n";
+    if (!in) {
+        cout << "\nNo feedback found.\n";
         return;
     }
 
-    cout << "\n======= ALL FEEDBACK =======\n";
+    cout << "\n======= All Feedback Entries =======\n";
     string line;
     while (getline(in, line)) {
-        cout << line << endl;
+        cout << line << "\n";
     }
     in.close();
 
-    cout << "\nPress Enter to return to menu...";
-    cin.get();
+    cin.get();     // Wait for Enter
     clearScreen();
-}
-
-// ===== Payment & Feedback Menu =====
-void paymentMenu() {
-    int choice;
-    do {
-        cout << "\n" << string(50, '=') << endl;
-        cout << "           PAYMENT & FEEDBACK MENU" << endl;
-        cout << string(50, '=') << endl;
-        cout << "1. Process Payment" << endl;
-        cout << "2. View Receipts" << endl;
-        cout << "3. Submit Feedback" << endl;
-        cout << "4. View Feedback" << endl;
-        cout << "0. Return to Main Menu" << endl;
-        cout << "Enter your choice: ";
-        if (!(cin >> choice)) {
-            cout << "Invalid input! Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(10000, '\n');
-            continue;
-        }
-        cin.ignore();
-
-        clearScreen();
-        switch (choice) {
-        case 1:
-            processPayment();
-            break;
-        case 2:
-            viewReceipts();
-            break;
-        case 3:
-            submitFeedback();
-            break;
-        case 4:
-            viewFeedback();
-            break;
-        case 0:
-            break;
-        default:
-            cout << "Invalid choice! Please select 0-4." << endl;
-        }
-
-    } while (choice != 0);
 }
 
 // ===== Demo main =====
