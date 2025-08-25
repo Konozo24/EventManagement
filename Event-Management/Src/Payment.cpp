@@ -72,14 +72,17 @@ void saveReceipt(const string& name, const string& eventName,
 
 // ===== Main: Checkout process =====
 void processPayment(const string& guestID) {
-    // 🔹 TODO: Replace with real lookup from registration.txt later
+    // TODO: Replace with real lookup from registration.txt later
     string name = "TEMP_NAME";
     string eventName = "TEMP_EVENT";
     int ticketAmount = 1;
     double ticketPrice = 30.0;
 
+    // Dummy selected products (later link with Registration module)
     vector<Product> products = { {"SmartWatch Pro", 299.0, 1} };
 
+    double productTotal = 0.0;
+    
     cout << "\n--- Payment Summary ---\n";
     cout << "Guest ID    : " << guestID << endl;
     cout << "Name        : " << name << endl;
