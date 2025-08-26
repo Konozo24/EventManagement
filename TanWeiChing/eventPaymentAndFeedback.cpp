@@ -15,8 +15,6 @@ struct Product {
     string name;
     double price;
     int quantity;
-    Product() : name(""), price(0.0), quantity(0) {}
-    Product(const string& n, double p, int q) : name(n), price(p), quantity(q) {}
 };
 
 struct Feedback {
@@ -120,7 +118,7 @@ void processPayment(const string& guestID) {
     double ticketPrice = 30.0;
 
     // Dummy selected products (later link with Registration module)
-    vector<Product> products = { {"SmartWatch Pro", 299.0, 1} };
+    vector<Product> selectedProducts = { {"SmartWatch Pro", 299.0, 1} };
 
     double productTotal = 0.0;
     
