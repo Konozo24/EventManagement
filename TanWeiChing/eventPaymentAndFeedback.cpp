@@ -156,7 +156,7 @@ void processPayment(const string& guestID) {
     getline(cin, method);
 
     if (method == "Cash" || method == "Credit" || method == "E-Wallet") {
-        saveReceipt(name, eventName, products, ticketAmount, ticketPrice, method);
+        saveReceipt(name, eventName, selectedProducts, ticketAmount, ticketPrice, method);
     } else {
         cout << "\nInvalid payment method.\n";
     }
