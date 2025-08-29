@@ -19,8 +19,8 @@ int main() {
     cout << "EVENT MANAGEMENT MODULES" << endl;
     cout << "=" << string(60, '=') << endl;
 
-    initializeDefaultRegistration(); 
-    
+    initializeDefaultRegistration();
+
     int choice;
     do {
         cout << "\n" << string(50, '=') << endl;
@@ -29,7 +29,7 @@ int main() {
         cout << "1. Event Booking (Module 1)" << endl;
         cout << "2. Event Monitoring (Module 2)" << endl;
         cout << "3. View Available Venues" << endl;
-        cout << "4. Payment & Checkout (Module 6)" << endl;
+        cout << "4. View Receipts Guest (Module 6)" << endl;
         cout << "5. Submit Feedback & Review (Module 7)" << endl;
         cout << "6. View Receipts (Admin)" << endl;
         cout << "7. View Feedbacks (Admin)" << endl;
@@ -63,10 +63,7 @@ int main() {
             clearScreen();
             break;
         case 4: {
-            string guestID;
-            cout << "Enter your Guest ID: ";
-            getline(cin, guestID);
-            processPayment(guestID);
+            viewReceipts();
             break;
         }
         case 5:
