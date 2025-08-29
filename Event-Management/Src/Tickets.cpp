@@ -1,4 +1,5 @@
 #include "Tickets.h"
+#include "Event.h"
 #include "Registration.h"
 #include "Utils.h"
 #include "Constants.h"
@@ -9,33 +10,42 @@
 #include <limits>
 using namespace std;
 
-// Function to generate unique guest IDs
-vector<int> generateGuestIDs(int lastID, int numTickets) {
-    vector<int> ids;
-    for (int i = 0; i < numTickets; i++) {
-        lastID++;
-        ids.push_back(lastID);
-    }
-    return ids;
-}
+
 
 void tickets() {
-    loadRegistrationFromFile();
-    Registration* reg = nullptr;
-    string eventName;
+    loadEventsFromFile();
+    Event* ev = nullptr;
+    string eventName, userName;
 
-    displayRegistration();
+	displayEventsForRegistration();
 
-    while (!reg) {
+  
+    do {
         cout << "\nEnter Event Name (or 'cancel' to exit): ";
         getline(cin, eventName);
+
         if (eventName == "cancel") {
             clearScreen();
             return;
         }
-        reg = findRegistrationByName(eventName);
-        if (!reg) cout << "Invalid event name! Please try again.\n";
-    }
+
+        ev = findEventByName(eventName);   
+        if (!ev) cout << "Invalid event name! Please try again.\n";
+            
+    } while (!ev);
+
+    do {
+        cout << "Enter your name (or 'cancel'): ";
+        getline(cin, userName);
+
+        if (userName == "cancel") { 
+            clearScreen(); 
+            return; 
+        }
+
+        if (userName.empty()) cout << "Name cannot be empty.\n";
+    } while (userName.empty());
+
 
     int ticketsRequested;
     bool validInput = false;
@@ -58,36 +68,52 @@ void tickets() {
             cout << "Ticket amount must be > 0!\n";
             validInput = false;
         }
-        else if (ticketsRequested > reg->ticketAmount) {
-            cout << "Not enough tickets! Only " << reg->ticketAmount << " left.\n";
+        else if (ticketsRequested > ev->ticketAmount) {
+            cout << "Not enough tickets! Only " << ev->ticketAmount << " left.\n";
             validInput = false;
         }
 
     } while (!validInput);
 
     // Deduct tickets
-    reg->ticketAmount -= ticketsRequested;
+    ev->ticketAmount -= ticketsRequested;
+    saveEventsToFile();   // update event list with reduced tickets
 
-    // Generate guest IDs
-    int lastID = reg->guestIDs.empty() ? 1000 : reg->guestIDs.back();
-    vector<int> newGuestIDs = generateGuestIDs(lastID, ticketsRequested);
-    reg->guestIDs.insert(reg->guestIDs.end(), newGuestIDs.begin(), newGuestIDs.end());
+
+    // Generate Registration ID
+    string newRegID = generateRegistrationID(); // "R#" auto-generated
+
+
+    // Create and save Registration
+    double totalCost = ev->ticketPrice * ticketsRequested; // total cost
+    Registration newReg(
+        newRegID,       // registrationID (string "R#")
+        ev->eventID,    // eventID ("E#")
+        ev->eventName,  // eventName
+        ev->eventDate,  // eventDate
+        userName,       // userName
+        ticketsRequested,
+        totalCost
+    );
+
+
+    
 
     // Save to file
+    registrations.push_back(newReg);
     saveRegistrationToFile();
 
     // Display confirmation
     clearScreen();
-    cout << "\n" << string(60, '=') << endl;
-    cout << "              REGISTRATION CONFIRMATION" << endl;
-    cout << string(60, '=') << endl;
-    cout << "Event:        " << reg->registrationName << endl;
-    cout << "Tickets:      " << ticketsRequested << endl;
-    cout << "Total Cost:   RM" << fixed << setprecision(2)
-        << reg->registrationCost * ticketsRequested << endl;
-
-    cout << "\nGenerated Guest IDs:\n";
-    for (int id : newGuestIDs) cout << " - " << id << endl;
+    cout << "\n" << string(60, '=') << "\n";
+    cout << "         REGISTRATION CONFIRMATION\n";
+    cout << string(60, '=') << "\n";
+    cout << "Registration ID: " << newReg.registrationID << "\n";
+    cout << "Event:           " << newReg.eventName << " (" << newReg.eventID << ")\n";
+	cout << "Date:            " << newReg.eventDate << "\n";
+    cout << "Name:            " << newReg.userName << "\n";
+    cout << "Tickets:         " << newReg.ticketsBought << "\n";
+    cout << "Total Paid:      RM" << fixed << setprecision(2) << newReg.registrationCost << "\n";
 
     cout << string(60, '=') << endl;
     cout << "\nPress Enter to continue...";
