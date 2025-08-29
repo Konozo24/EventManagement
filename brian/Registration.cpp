@@ -41,17 +41,26 @@ void loadRegistrationFromFile() {
         if (line.empty()) continue;
 
         stringstream ss(line);
-        string id, name, tickets, cost;
+        string id, name, tickets, cost, guestList;
         getline(ss, id, '|');
         getline(ss, name, '|');
         getline(ss, tickets, '|');
         getline(ss, cost, '|');
+        getline(ss, guestList, '|');
 
         Registration reg;
         reg.registrationID = stoi(id);
         reg.registrationName = name;
         reg.ticketAmount = stoi(tickets);
         reg.registrationCost = stod(cost);
+
+        // Load guest IDs if present
+        reg.guestIDs.clear();
+        stringstream gs(guestList);
+        string gID;
+        while (getline(gs, gID, ',')) {
+            if (!gID.empty()) reg.guestIDs.push_back(stoi(gID));
+        }
 
         registrations.push_back(reg);
     }
@@ -64,7 +73,15 @@ void saveRegistrationToFile() {
         file << reg.registrationID << "|"
             << reg.registrationName << "|"
             << reg.ticketAmount << "|"
-            << reg.registrationCost << endl;
+            << reg.registrationCost << "|";
+
+        // Save guest IDs as comma-separated
+        for (size_t i = 0; i < reg.guestIDs.size(); i++) {
+            file << reg.guestIDs[i];
+            if (i != reg.guestIDs.size() - 1) file << ",";
+        }
+
+        file << endl;
     }
     file.close();
 }
@@ -98,4 +115,3 @@ Registration* findRegistrationByName(const string& name) {
     }
     return nullptr;
 }
-
