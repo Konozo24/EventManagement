@@ -8,6 +8,7 @@
 #include "Feedback.h"
 #include "Tickets.h"
 #include "Registration.h"
+#include "Report.h"
 #include "Utils.h"
 using namespace std;
 
@@ -33,6 +34,7 @@ int main() {
         cout << "6. View Receipts (Admin)" << endl;
         cout << "7. View Feedbacks (Admin)" << endl;
         cout << "8. Register Events / Ticketing" << endl;
+        cout << "9. Event Reporting (Admin)" << endl;
         cout << "0. Exit" << endl;
         cout << string(50, '-') << endl;
         cout << "Enter your choice: ";
@@ -78,6 +80,9 @@ int main() {
             break;
         case 8:
             tickets();
+            break;
+        case 9:
+            displayReportMenu();
             break;
         case 0:
             cout << "\nThank you for using the system!" << endl;
