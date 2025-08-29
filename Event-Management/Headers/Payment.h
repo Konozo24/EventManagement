@@ -5,10 +5,11 @@
 #include <string>
 #include <vector>
 #include "Product.h"
+#include "Registration.h"
 using namespace std;
 
 // Payment functions
-void processPayment(const string& guestID);
+void processPayment(Registration& reg);
 void viewReceipts();
 
 #endif
