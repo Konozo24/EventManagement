@@ -38,22 +38,32 @@ void tickets() {
     }
 
     int ticketsRequested;
-    while (true) {
+    bool validInput = false;
+
+    do {
         cout << "Enter number of tickets: ";
         string input;
         getline(cin, input);
 
-        bool valid = !input.empty();
-        for (char c : input) if (!isdigit(c)) valid = false;
+        validInput = !input.empty();
+        for (char c : input) if (!isdigit(c)) validInput = false;
 
-        if (!valid) { cout << "Invalid input! Enter a number only.\n"; continue; }
+        if (!validInput) {
+            cout << "Invalid input! Enter a number only.\n";
+            continue;
+        }
 
         ticketsRequested = stoi(input);
-        if (ticketsRequested <= 0) cout << "Ticket amount must be > 0!\n";
-        else if (ticketsRequested > reg->ticketAmount)
+        if (ticketsRequested <= 0) {
+            cout << "Ticket amount must be > 0!\n";
+            validInput = false;
+        }
+        else if (ticketsRequested > reg->ticketAmount) {
             cout << "Not enough tickets! Only " << reg->ticketAmount << " left.\n";
-        else break;
-    }
+            validInput = false;
+        }
+
+    } while (!validInput);
 
     // Deduct tickets
     reg->ticketAmount -= ticketsRequested;
