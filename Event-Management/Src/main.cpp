@@ -15,11 +15,11 @@ using namespace std;
 
 int main() {
     cout << "=" << string(60, '=') << endl;
-    cout << "    TAN MING WEI - EVENT MANAGEMENT MODULES" << endl;
+    cout << "EVENT MANAGEMENT MODULES" << endl;
     cout << "=" << string(60, '=') << endl;
 
-    initializeDefaultRegistration();
-
+    initializeDefaultRegistration(); 
+    
     int choice;
     do {
         cout << "\n" << string(50, '=') << endl;
@@ -32,6 +32,7 @@ int main() {
         cout << "5. Submit Feedback & Review (Module 7)" << endl;
         cout << "6. View Receipts (Admin)" << endl;
         cout << "7. View Feedbacks (Admin)" << endl;
+        cout << "8. Register Events / Ticketing" << endl;
         cout << "0. Exit" << endl;
         cout << string(50, '-') << endl;
         cout << "Enter your choice: ";
