@@ -3,6 +3,7 @@
 #include "Registration.h"
 #include "Utils.h"
 #include "Constants.h"
+#include "Payment.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -83,7 +84,6 @@ void tickets() {
     // Generate Registration ID
     string newRegID = generateRegistrationID(); // "R#" auto-generated
 
-
     // Create and save Registration
     double totalCost = ev->ticketPrice * ticketsRequested; // total cost
     Registration newReg(
@@ -96,7 +96,8 @@ void tickets() {
         totalCost
     );
 
-
+    // Process payment immediately
+    processPayment(newReg);
     
 
     // Save to file
