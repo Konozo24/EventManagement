@@ -89,7 +89,7 @@ void processPayment(Registration& reg) {
     double productTotal = 0.0;
 
     cout << "\n--- Payment Summary ---\n";
-    cout << "Registration ID    : " << reg.registrationID << endl;
+    cout << "Registration ID : " << reg.registrationID << endl;
     cout << "Name        : " << reg.userName << endl;
     cout << "Event       : " << reg.eventName << " (" << reg.eventID << ")\n";
     cout << "Tickets     : " << reg.ticketsBought << endl;
