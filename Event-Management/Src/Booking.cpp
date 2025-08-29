@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Venue.h"
+#include "Event.h"
 #include "Booking.h"
 #include "Utils.h"
 #include "Constants.h"
@@ -55,8 +56,12 @@ void bookEvent() {
             cout << "Event name must be at least 3 characters long!" << endl;
             continue;
         }
+
+        // valid -> stop loop
         break;
-    } while (true);
+
+    } while (eventName.empty() || eventName.length() < 3);
+
 
     // Event date validation
     do {
@@ -68,8 +73,11 @@ void bookEvent() {
             cout << "Example: 15-08-2025" << endl;
             continue;
         }
+
+        // valid -> stop loop
         break;
-    } while (true);
+
+    } while (!isValidDateFormat(eventDate));
 
     // Venue selection with validation
     int selectedVenueID = validateVenueSelection();
@@ -85,22 +93,64 @@ void bookEvent() {
         vendorDetails = "No vendors assigned";
     }
 
-    // Update venue booking status
+    double ticketPrice = 0.0;
+    bool validPrice = false;
+
+    do {
+        cout << "Enter Ticket Price: ";
+        string priceInput;
+        getline(cin, priceInput);
+
+        try {
+            size_t idx;
+            ticketPrice = stod(priceInput, &idx); // string → double
+
+            if (idx != priceInput.size()) {
+                throw invalid_argument("Invalid characters after number");
+            }
+
+            if (ticketPrice > 0) {
+                validPrice = true; 
+            }
+            else {
+                cout << "Ticket price must be greater than 0!\n";
+            }
+        }
+        catch (invalid_argument&) {
+            cout << "Invalid input! Enter a valid number (e.g., 50 or 49.90).\n";
+        }
+        catch (out_of_range&) {
+            cout << "Number too large! Try again.\n";
+        }
+
+    } while (!validPrice);
+
+
+
+    // Find venue capacity & Update venue booking status
+    int ticketAmount = 0;
     for (auto& venue : venues) {
         if (venue.venueID == selectedVenueID) {
             venue.isBooked = true;
             venue.usageCount++;
+            ticketAmount = venue.capacity;  // capacity comes from Venue
             break;
         }
     }
 
-    // Save booking to events file
-    ofstream bookingFile(EVENTS_FILE, ios::app);
-    if (bookingFile.is_open()) {
-        bookingFile << eventName << "|" << eventDate << "|"
-            << selectedVenueID << "|" << vendorDetails << endl;
-        bookingFile.close();
-    }
+    // Generate event ID (auto-increment)
+    int nextEventNum = events.empty() ? 1 : stoi(events.back().eventID.substr(1)) + 1;
+    string newEventID = "E" + to_string(nextEventNum);
+
+    // Create new Event object
+    Event newEvent(newEventID, eventName, eventDate, "V" + to_string(selectedVenueID),
+        vendorDetails, ticketPrice, ticketAmount);
+
+    // Add to global vector
+    events.push_back(newEvent);
+
+    // Save all events to file
+    saveEventsToFile();
 
     // Save updated venues
     saveVenuesToFile();
@@ -109,9 +159,10 @@ void bookEvent() {
     cout << "\n" << string(60, '=') << endl;
     cout << "              BOOKING CONFIRMATION" << endl;
     cout << string(60, '=') << endl;
+    cout << "Event ID: " << newEventID << endl;
     cout << "Event Name: " << eventName << endl;
     cout << "Event Date: " << eventDate << endl;
-    cout << "Venue ID: " << selectedVenueID << endl;
+    cout << "Venue ID: V" << selectedVenueID << endl;
     cout << "Vendor Details: " << vendorDetails << endl;
     cout << "Status: Successfully Booked!" << endl;
     cout << string(60, '=') << endl;
