@@ -124,7 +124,7 @@ void bookEvent() {
         }
 
     } while (!validPrice);
-
+    
 
 
     // Find venue capacity & Update venue booking status
