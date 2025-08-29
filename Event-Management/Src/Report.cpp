@@ -1,135 +1,165 @@
 #include "Report.h"
+#include <fstream>
+#include <iomanip>
+#include <map>
 
-void Report::loadRegistrations(const string& filename) {
+// load registration.txt
+void Report::loadRegistrationData(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Error: Cannot open " << filename << endl;
+        cout << "Error: Could not open " << filename << endl;
         return;
     }
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string eventName, eventDate, venue;
-        int guests;
-        ss >> eventName >> eventDate >> venue >> guests;
-        summaries.push_back(BookingSummary(eventName, eventDate, guests, 0, venue));
+    summaries.clear();
+    string event, date, venue;
+    int guests;
+    while (file >> event >> date >> venue >> guests) {
+        BookingSummary summary{event, date, venue, guests, 0};
+        summaries.push_back(summary);
     }
     file.close();
 }
 
-void Report::loadCheckins(const string& filename) {
+// load checkin_log.txt
+void Report::loadCheckInData(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Error: Cannot open " << filename << endl;
+        cout << "Error: Could not open " << filename << endl;
         return;
     }
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string eventName;
-        int checkedInCount;
-        ss >> eventName >> checkedInCount;
-        for (auto& summary : summaries) {
-            if (summary.eventName == eventName) {
-                summary.checkedInGuests += checkedInCount;
+    string event;
+    int checkedIn;
+    while (file >> event >> checkedIn) {
+        for (auto& s : summaries) {
+            if (s.eventName == event) {
+                s.checkedInGuests = checkedIn;
+                break;
             }
         }
     }
     file.close();
 }
 
-void Report::viewSummary() {
-    if (summaries.empty()) {
-        cout << "No event data available.\n";
+// load venues.txt
+void Report::loadVenueData(const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cout << "Error: Could not open " << filename << endl;
         return;
     }
-    cout << left << setw(15) << "Event Name"
-        << setw(15) << "Date"
-        << setw(15) << "Venue"
-        << setw(15) << "Registered"
-        << setw(15) << "Checked-In" << endl;
+    map<string, int> venueCount;
+    string venue;
+    while (file >> venue) {
+        venueCount[venue]++;
+    }
+    cout << "\nVenue Usage Statistics\n";
+    cout << left << setw(15) << "Venue" << setw(10) << "Usage Count" << endl;
+    cout << string(25, '-') << endl;
+    for (auto& v : venueCount) {
+        cout << left << setw(15) << v.first << setw(10) << v.second << endl;
+    }
+    file.close();
+}
+
+// summary of events
+void Report::displayAllEventsSummary() {
+    if (summaries.empty()) {
+        cout << "No registration data available.\n";
+        return;
+    }
+    cout << "\nSummary of All Events\n";
+    cout << left << setw(15) << "Event Name" 
+         << setw(15) << "Date" 
+         << setw(15) << "Venue" 
+         << setw(15) << "Registered" 
+         << setw(15) << "Checked-In" << endl;
     cout << string(70, '-') << endl;
-    for (auto& s : summaries) {
-        cout << left << setw(15) << s.eventName
-            << setw(15) << s.eventDate
-            << setw(15) << s.venueName
-            << setw(15) << s.totalGuests
-            << setw(15) << s.checkedInGuests << endl;
+    for (const auto& s : summaries) {
+        cout << left << setw(15) << s.eventName 
+             << setw(15) << s.date 
+             << setw(15) << s.venue 
+             << setw(15) << s.totalGuests 
+             << setw(15) << s.checkedInGuests << endl;
     }
 }
 
-void Report::viewAttendance() {
+// attendance report
+void Report::displayAttendanceReport() {
     if (summaries.empty()) {
         cout << "No attendance data available.\n";
         return;
     }
-    cout << left << setw(15) << "Event Name"
-        << setw(15) << "Registered"
-        << setw(15) << "Checked-In"
-        << setw(15) << "Attendance %" << endl;
-    cout << string(60, '-') << endl;
-    for (auto& s : summaries) {
-        double percentage = (s.totalGuests > 0) ? (s.checkedInGuests * 100.0 / s.totalGuests) : 0.0;
-        cout << left << setw(15) << s.eventName
-            << setw(15) << s.totalGuests
-            << setw(15) << s.checkedInGuests
-            << setw(15) << fixed << setprecision(1) << percentage << "%" << endl;
+    cout << "\nAttendance Report\n";
+    for (const auto& s : summaries) {
+        cout << "Event: " << s.eventName 
+             << " | Registered: " << s.totalGuests 
+             << " | Checked-In: " << s.checkedInGuests << endl;
     }
 }
 
-void Report::viewVenueUsage() {
-    if (summaries.empty()) {
-        cout << "No venue data available.\n";
+// export to file
+void Report::exportReportToFile(const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "Error: Could not create " << filename << endl;
         return;
     }
-    vector<string> venues;
-    for (auto& s : summaries) {
-        venues.push_back(s.venueName);
+    file << "Event Report Summary\n";
+    file << left << setw(15) << "Event Name" 
+         << setw(15) << "Date" 
+         << setw(15) << "Venue" 
+         << setw(15) << "Registered" 
+         << setw(15) << "Checked-In" << endl;
+    file << string(70, '-') << endl;
+    for (const auto& s : summaries) {
+        file << left << setw(15) << s.eventName 
+             << setw(15) << s.date 
+             << setw(15) << s.venue 
+             << setw(15) << s.totalGuests 
+             << setw(15) << s.checkedInGuests << endl;
     }
-    sort(venues.begin(), venues.end());
-    venues.erase(unique(venues.begin(), venues.end()), venues.end());
+    file.close();
+    cout << "Report exported to " << filename << endl;
+}
 
-    cout << left << setw(20) << "Venue" << setw(15) << "Times Used" << endl;
-    cout << string(40, '-') << endl;
-    for (auto& v : venues) {
-        int count = 0;
-        for (auto& s : summaries) {
-            if (s.venueName == v) count++;
+// menu function
+void displayReportMenu() {
+    Report report;
+    int choice;
+    do {
+        cout << "\n===== Event Reporting Module =====\n";
+        cout << "1. View Summary of All Events\n";
+        cout << "2. View Attendance Report\n";
+        cout << "3. View Venue Usage Statistics\n";
+        cout << "4. Export Report to File\n";
+        cout << "5. Return to Main Menu\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                report.loadRegistrationData("registration.txt");
+                report.loadCheckInData("checkin_log.txt");
+                report.displayAllEventsSummary();
+                break;
+            case 2:
+                report.loadRegistrationData("registration.txt");
+                report.loadCheckInData("checkin_log.txt");
+                report.displayAttendanceReport();
+                break;
+            case 3:
+                report.loadVenueData("venues.txt");
+                break;
+            case 4:
+                report.loadRegistrationData("registration.txt");
+                report.loadCheckInData("checkin_log.txt");
+                report.exportReportToFile("report.txt");
+                break;
+            case 5:
+                cout << "Returning to Main Menu...\n";
+                break;
+            default:
+                cout << "Invalid choice. Try again.\n";
         }
-        cout << left << setw(20) << v << setw(15) << count << endl;
-    }
-}
-
-void Report::exportReport(const string& filename) {
-    
-    string path = __FILE__;
-    size_t pos = path.find_last_of("\\/");  // works for both Windows/Linux
-    string folder = (pos == string::npos) ? "" : path.substr(0, pos + 1);
-
-    
-    string fullPath = folder + filename;
-
-    ofstream out(fullPath);
-    if (!out.is_open()) {
-        cout << "Error: Cannot write to " << fullPath << endl;
-        return;
-    }
-
-    out << "Event Report Summary\n";
-    out << left << setw(15) << "Event Name"
-        << setw(15) << "Date"
-        << setw(15) << "Venue"
-        << setw(15) << "Registered"
-        << setw(15) << "Checked-In" << endl;
-    out << string(70, '-') << endl;
-    for (auto& s : summaries) {
-        out << left << setw(15) << s.eventName
-            << setw(15) << s.eventDate
-            << setw(15) << s.venueName
-            << setw(15) << s.totalGuests
-            << setw(15) << s.checkedInGuests << endl;
-    }
-    out.close();
-
-    cout << "Report exported to: " << fullPath << endl;
+    } while (choice != 5);
 }
