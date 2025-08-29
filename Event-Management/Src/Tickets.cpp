@@ -40,7 +40,8 @@ void tickets() {
 
     // Prompt user for ticket quantity
     int ticketsRequested;
-    while (true) {
+    bool invalidInput = false;
+    while (!invalidInput) {
         cout << "Enter number of tickets: ";
         if (!(cin >> ticketsRequested)) {
             cin.clear();
@@ -58,7 +59,7 @@ void tickets() {
                 << reg->ticketAmount << " left.\n";
         }
         else {
-            break;
+            invalidInput = true;
         }
     }
 
