@@ -1,5 +1,6 @@
 #include "Registration.h"
 #include "Constants.h"
+#include "Event.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -7,23 +8,31 @@
 using namespace std;
 
 vector<Registration> registrations;
+static int nextRegistrationID = 1; // auto increment counter
 
-Registration::Registration() : registrationID(0), registrationName(""), ticketAmount(0), registrationCost(0.0) {}
-
-Registration::Registration(int regId, const string& regName, int ticAmt, double regCost)
-    : registrationID(regId), registrationName(regName), ticketAmount(ticAmt), registrationCost(regCost) {
+// Constructors
+Registration::Registration()
+    : registrationID(""), eventID(""), eventName(""), eventDate(""),
+    userName(""), ticketsBought(0), registrationCost(0.0) {
 }
 
+Registration::Registration(const string& regId, const string& evId, const string& evName,
+    const string& evDate, const string& uName,
+    int tickets, double cost)
+    : registrationID(regId), eventID(evId), eventName(evName),
+    eventDate(evDate), userName(uName),
+    ticketsBought(tickets), registrationCost(cost) {
+}
+
+
+// Initialize dummy events if file not found
 void initializeDefaultRegistration() {
     registrations.clear();
 
-    registrations.push_back(Registration(1, "iPhone 28 Launch", 800, 100.00));
-    registrations.push_back(Registration(2, "Samsung Galaxy S30 Launch", 600, 80.00));
-    registrations.push_back(Registration(3, "Sony Headphones Launch", 300, 50.00));
-    registrations.push_back(Registration(4, "PlayStation 6 Launch", 400, 90.00));
-    registrations.push_back(Registration(5, "Nintendo Switch 3 Launch", 250, 70.00));
-    registrations.push_back(Registration(6, "Yamaha Bike Launch", 150, 30.00));
-    registrations.push_back(Registration(7, "Daikin Air Conditioner Launch", 50, 20.00));
+    registrations.push_back(Registration("R" + to_string(nextRegistrationID++), "E1", "Concert A", "10-12-2025", "Alice", 2, 200.0));
+    registrations.push_back(Registration("R" + to_string(nextRegistrationID++), "E2", "Concert B", "11-12-2025", "Bob", 1, 120.0));
+    registrations.push_back(Registration("R" + to_string(nextRegistrationID++), "E3", "Concert C", "12-12-2025", "Charlie", 3, 450.0));
+
     saveRegistrationToFile();
 }
 
@@ -37,33 +46,32 @@ void loadRegistrationFromFile() {
 
     registrations.clear();
     string line;
+    int maxID = 0;
+
     while (getline(file, line)) {
         if (line.empty()) continue;
 
         stringstream ss(line);
-        string id, name, tickets, cost, guestList;
-        getline(ss, id, '|');
-        getline(ss, name, '|');
+        string regId, evId, evName, evDate, userName, tickets, cost;
+
+        getline(ss, regId, '|');
+        getline(ss, evId, '|');
+        getline(ss, evName, '|');
+        getline(ss, evDate, '|');
+        getline(ss, userName, '|');
         getline(ss, tickets, '|');
         getline(ss, cost, '|');
-        getline(ss, guestList, '|');
 
-        Registration reg;
-        reg.registrationID = stoi(id);
-        reg.registrationName = name;
-        reg.ticketAmount = stoi(tickets);
-        reg.registrationCost = stod(cost);
-
-        // Load guest IDs if present
-        reg.guestIDs.clear();
-        stringstream gs(guestList);
-        string gID;
-        while (getline(gs, gID, ',')) {
-            if (!gID.empty()) reg.guestIDs.push_back(stoi(gID));
-        }
-
+        Registration reg(regId, evId, evName, evDate, userName, stoi(tickets), stod(cost));
         registrations.push_back(reg);
+
+        // keep track of largest numeric part of regId
+        if (regId.size() > 1 && regId[0] == 'R') {
+            int num = stoi(regId.substr(1));
+            if (num > maxID) maxID = num;
+        }
     }
+
     file.close();
 }
 
@@ -71,47 +79,45 @@ void saveRegistrationToFile() {
     ofstream file(REGISTRATION_FILE);
     for (const auto& reg : registrations) {
         file << reg.registrationID << "|"
-            << reg.registrationName << "|"
-            << reg.ticketAmount << "|"
-            << reg.registrationCost << "|";
-
-        // Save guest IDs as comma-separated
-        for (size_t i = 0; i < reg.guestIDs.size(); i++) {
-            file << reg.guestIDs[i];
-            if (i != reg.guestIDs.size() - 1) file << ",";
-        }
-
-        file << endl;
+            << reg.eventID << "|"
+            << reg.eventName << "|"
+            << reg.eventDate << "|"
+            << reg.userName << "|"
+            << reg.ticketsBought << "|"
+            << fixed << setprecision(2) << reg.registrationCost
+            << endl;
     }
     file.close();
 }
 
 void displayRegistration() {
-    cout << "\n" << string(60, '=') << endl;
-    cout << "                   AVAILABLE EVENTS" << endl;
-    cout << string(60, '=') << endl;
-    cout << left << setw(5) << "ID"
-        << setw(35) << "Event Name"
-        << setw(10) << "Tickets"
-        << setw(10) << "Cost (RM)" << endl;
-    cout << string(60, '-') << endl;
+    cout << "\n" << string(80, '=') << endl;
+    cout << "                   REGISTRATIONS" << endl;
+    cout << string(80, '=') << endl;
+    cout << left << setw(8) << "RegID"
+        << setw(6) << "EvID"
+        << setw(20) << "Event Name"
+        << setw(12) << "Date"
+        << setw(12) << "Guest"
+        << setw(8) << "Tickets"
+        << setw(10) << "Cost(RM)" << endl;
+    cout << string(80, '-') << endl;
 
     for (const auto& reg : registrations) {
-        if (reg.ticketAmount > 0) {
-            cout << left << setw(5) << reg.registrationID
-                << setw(35) << reg.registrationName
-                << setw(10) << reg.ticketAmount
-                << "RM" << fixed << setprecision(2) << reg.registrationCost << endl;
-        }
+        cout << left << setw(8) << reg.registrationID
+            << setw(6) << reg.eventID
+            << setw(20) << reg.eventName
+            << setw(12) << reg.eventDate
+            << setw(12) << reg.userName
+            << setw(8) << reg.ticketsBought
+            << setw(10) << fixed << setprecision(2) << reg.registrationCost
+            << endl;
     }
-    cout << string(60, '=') << endl;
+    cout << string(80, '=') << endl;
 }
 
-Registration* findRegistrationByName(const string& name) {
-    for (auto& reg : registrations) {
-        if (reg.registrationName == name) {
-            return &reg;
-        }
-    }
-    return nullptr;
+string generateRegistrationID() {
+    // Caller should have called loadRegistrationFromFile() earlier so nextRegistrationID is correct.
+    string id = "R" + to_string(nextRegistrationID++);
+    return id;
 }
