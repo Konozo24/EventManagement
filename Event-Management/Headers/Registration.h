@@ -8,8 +8,9 @@ using namespace std;
 struct Registration {
     int registrationID;
     string registrationName;
-    int ticketAmount; 
+    int ticketAmount;       // tickets available
     double registrationCost;
+    vector<int> guestIDs;   // store all guest IDs for this event
 
     Registration();
     Registration(int regId, const string& regName, int ticAmt, double regCost);
