@@ -152,8 +152,13 @@ void viewReceipts() {
     }
 
     string regID;
-    cout << "Enter Registration ID to view receipt (e.g., R1): ";
+    cout << "Enter Registration ID to view receipt (e.g., R1) or 0 to return: ";
     getline(cin, regID);
+
+    if (regID == "0") {
+        clearScreen();
+        return; 
+    }
 
     bool found = false;
     string line;
