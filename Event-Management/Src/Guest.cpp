@@ -11,8 +11,8 @@ using namespace std;
 
 vector<Guest> guests;
 
-Guest::Guest() : guestID(0), name(""), eventName(""), checkedIn(false), checkInTime("") {}
-Guest::Guest(int id, const string& guestName, const string& event)
+Guest::Guest() : guestID("0"), name(""), eventName(""), checkedIn(false), checkInTime("") {}
+Guest::Guest(const string& id, const string& guestName, const string& event)
     : guestID(id), name(guestName), eventName(event), checkedIn(false), checkInTime("") {
 }
 
@@ -26,9 +26,9 @@ void Guest::checkIn() {
         checkInTime.pop_back();
 }
 
-// Load guests from registration file
+// Load guests from guest file
 void loadGuestsFromFile() {
-    ifstream file(REGISTRATION_FILE);
+    ifstream file(GUESTS_FILE);
     if (!file.is_open()) {
         return; // File doesn't exist yet
     }
@@ -48,7 +48,7 @@ void loadGuestsFromFile() {
 
         if (tokens.size() >= 3) {
             Guest guest;
-            guest.guestID = stoi(tokens[0]);
+            guest.guestID = tokens[0];
             guest.name = tokens[1];
             guest.eventName = tokens[2];
             guest.checkedIn = (tokens.size() > 3) ? (tokens[3] == "1") : false;
@@ -56,6 +56,26 @@ void loadGuestsFromFile() {
             guests.push_back(guest);
         }
     }
+    file.close();
+}
+
+// Save guests to file
+void saveGuestsToFile() {
+    ofstream file(GUESTS_FILE);
+    if (!file.is_open()) {
+        cout << "Error saving guests to file.\n";
+        return;
+    }
+
+    for (const auto& guest : guests) {
+        file << guest.guestID << "|"
+            << guest.name << "|"
+            << guest.eventName << "|"
+            << (guest.checkedIn ? "1" : "0") << "|"
+            << guest.checkInTime
+            << "\n";
+    }
+
     file.close();
 }
 
@@ -87,30 +107,31 @@ void displayRegisteredGuests() {
     }
     cout << string(80, '=') << endl;
 }
-
-// Validate guest ID input 
-int validateGuestIDInput() {
-    int guestID;
+// Validate guest ID input
+string validateGuestIDInput() {
+    string guestID;
     bool validInput = false;
 
     do {
         cout << "Enter Guest ID to check in (0 to return to menu): ";
-        if (!(cin >> guestID)) {
-            cout << "Invalid input! Please enter a valid number." << endl;
-            cin.clear();
-            cin.ignore(10000, '\n');
-            continue;
+        getline(cin, guestID);
+
+        if (guestID == "0") return "0"; // exit signal
+
+        // Simple validation: must start with 'G' and followed by digits
+        if (guestID.size() >= 2 && guestID[0] == 'G') {
+            validInput = true;
+            for (size_t i = 1; i < guestID.size(); ++i) {
+                if (!isdigit(guestID[i])) {
+                    validInput = false;
+                    break;
+                }
+            }
         }
-        cin.ignore();
 
-        if (guestID == 0) return 0;
-
-        if (guestID < 0) {
-            cout << "Guest ID cannot be negative!" << endl;
-            continue;
+        if (!validInput) {
+            cout << "Invalid Guest ID format! Example: G1, G2, etc.\n";
         }
-
-        validInput = true;
 
     } while (!validInput);
 
@@ -118,11 +139,24 @@ int validateGuestIDInput() {
 }
 
 // Verify if Guest ID and Name match an existing guest
-bool verifyGuest(int guestID, const string& name) {
+bool verifyGuest(const string& guestID, const string& name) {
     for (const auto& guest : guests) {
         if (guest.guestID == guestID && guest.name == name) {
             return true;
         }
     }
     return false;
+}
+
+string generateGuestID() {
+    int nextID = 1;
+    if (!guests.empty()) {
+        try {
+            nextID = stoi(guests.back().guestID.substr(1)) + 1;
+        }
+        catch (...) {
+            nextID = guests.size() + 1; // fallback
+        }
+    }
+    return "G" + to_string(nextID);
 }
