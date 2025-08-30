@@ -36,7 +36,7 @@ void submitFeedback() {
     getline(cin, name);
 
     // Verify Guest ID + Name
-    if (!verifyGuest(stoi(guestID), name)) {
+    if (!verifyGuest(guestID, name)) {
         cout << "Guest ID and Name do not match our records.\n";
         return;
     }
