@@ -1,5 +1,7 @@
 #include <iostream>
 #include "Guest.h"
+#include "Event.h"
+#include "Venue.h"
 #include "Utils.h"
 #include "Constants.h"
 #include <vector>
@@ -27,32 +29,81 @@ void displayCheckInStatistics() {
     cout << string(50, '-') << endl;
 }
 
-// MAIN FUNCTION: Event Monitoring
-void monitorEvent() {
-    cout << "\n" << string(70, '=') << endl;
-    cout << "                EVENT MONITORING SYSTEM" << endl;
-    cout << string(70, '=') << endl;
+void markVenueAsAvailable() {
+    loadVenuesFromFile();
+    loadEventsFromFile();
 
-    // Load latest guest data
-    loadGuestsFromFile();
-
-    // Display current guest status
-    displayRegisteredGuests();
-
-    if (guests.empty()) {
-        cout << "\nPress Enter to return to main menu...";
-        cin.get();
-        clearScreen();
+    if (venues.empty()) {
+        cout << "No venues found.\n";
         return;
     }
 
-    // Event monitoring menu loop
-    int choice;
+    displayAllVenues();
+
+    int venueID;
+    bool success = false;
+
     do {
+        venueID = validateBookedVenueSelection(); // returns 0 if user cancels
+        if (venueID == 0) {
+            cout << "Cancelled. Returning to menu...\n";
+            return;
+        }
+
+        // Find the venue
+        for (auto& venue : venues) {
+            if (venue.venueID == venueID) {
+                if (!venue.isBooked) {
+                    cout << "Venue " << venue.name << " is already available.\n";
+                }
+                else {
+                    venue.isBooked = false; // mark as available
+
+                    // Remove associated events
+                    string venueStr = "V" + to_string(venueID);
+                    events.erase(
+                        remove_if(events.begin(), events.end(),
+                            [&](const Event& ev) { return ev.venueID == venueStr; }),
+                        events.end()
+                    );
+
+                    saveVenuesToFile();
+                    saveEventsToFile();
+
+                    cout << "Venue " << venue.name << " has been marked as available.\n";
+                    cout << "Associated events using this venue have been removed.\n";
+                }
+                success = true; // valid operation done
+                break;
+            }
+        }
+
+        if (!success) {
+            cout << "Invalid Venue ID. Please try again.\n";
+        }
+
+    } while (!success);
+}
+
+// MAIN FUNCTION: Event Monitoring
+void monitorEvent() {
+    int choice;
+
+    do {
+        clearScreen();
+
+        // Load latest guest data
+        loadGuestsFromFile();
+
+        // Display current guest status
+        displayRegisteredGuests();
+
+        // Show menu
         cout << "\nEvent Monitoring Options:" << endl;
         cout << "1. Check in a guest" << endl;
         cout << "2. Refresh guest list" << endl;
         cout << "3. View check-in statistics" << endl;
+        cout << "4. Mark venue as available" << endl;
         cout << "0. Return to main menu" << endl;
         cout << "Enter your choice: ";
 
@@ -60,14 +111,17 @@ void monitorEvent() {
             cout << "Invalid input! Please enter a valid number." << endl;
             cin.clear();
             cin.ignore(10000, '\n');
+            cout << "\nPress Enter to continue...";
+            cin.get();
+            cin.get(); // consume newline
             continue;
         }
         cin.ignore();
 
         switch (choice) {
         case 1: {
-            int guestID = validateGuestIDInput();
-            if (guestID == 0) break;
+            string guestID = validateGuestIDInput();
+            if (guestID == "0") break;  // user cancelled
 
             bool found = false;
             for (auto& guest : guests) {
@@ -79,19 +133,12 @@ void monitorEvent() {
                     }
                     else {
                         guest.checkIn();
-
-                        // Log check-in activity
-                        ofstream logFile(CHECKIN_LOG_FILE, ios::app);
-                        if (logFile.is_open()) {
-                            logFile << guestID << "|" << guest.name << "|"
-                                << guest.eventName << "|" << guest.checkInTime << endl;
-                            logFile.close();
-                        }
+                        saveGuestsToFile(); // save changes immediately
 
                         cout << "\n" << string(50, '*') << endl;
                         cout << "CHECK-IN SUCCESSFUL!" << endl;
                         cout << "Guest: " << guest.name << endl;
-                        cout << "ID: " << guestID << endl;
+                        cout << "ID: " << guest.guestID << endl;
                         cout << "Event: " << guest.eventName << endl;
                         cout << "Time: " << guest.checkInTime << endl;
                         cout << string(50, '*') << endl;
@@ -101,27 +148,46 @@ void monitorEvent() {
             }
 
             if (!found) {
-                cout << "\nGuest ID " << guestID << " not found in the registration list!" << endl;
-                cout << "Please verify the ID and try again." << endl;
+                cout << "\nGuest ID " << guestID << " not found!" << endl;
             }
+
+            cout << "\nPress Enter to continue...";
+            cin.get();
             break;
         }
-        case 2:
-            loadGuestsFromFile();
-            displayRegisteredGuests();
+
+        case 2: // Refresh guest list
+            cout << "\nGuest list refreshed." << endl;
+            cout << "Press Enter to continue...";
+            cin.get();
             break;
+
         case 3:
             displayCheckInStatistics();
+            cout << "\nPress Enter to continue...";
+            cin.get();
             break;
+
+        case 4:
+            // Mark venue as available
+            markVenueAsAvailable();
+            cout << "\nPress Enter to continue...";
+            cin.get();
+            break;
+
         case 0:
             cout << "Returning to main menu..." << endl;
-            clearScreen();
+            cout << "\nPress Enter to continue...";
+            cin.get();
             break;
+
         default:
             cout << "Invalid choice! Please select 0-3." << endl;
+            cout << "\nPress Enter to continue...";
+            cin.get();
         }
 
     } while (choice != 0);
-
-
 }
+
+
