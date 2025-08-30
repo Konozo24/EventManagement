@@ -138,19 +138,59 @@ void Report::showMenu() {
                     << setw(20) << s.checkedInGuests << endl;
             }
             break;
-        case 2:
-            loadGuests("guest.txt");
-            cout << "\nAttendance data loaded from guest.txt\n";
+
+        case 2: {
+            // Attendance Report
+            ifstream file("guest.txt");
+            if (!file) {
+                cerr << "Error: Cannot open guest.txt\n";
+                break;
+            }
+
+            cout << "\nAttendance Report (guest.txt):\n";
+            cout << left << setw(10) << "GuestID"
+                << setw(20) << "Name"
+                << setw(20) << "Event"
+                << setw(15) << "Checked In"
+                << setw(20) << "Time" << endl;
+            cout << string(85, '-') << endl;
+
+            string line;
+            while (getline(file, line)) {
+                stringstream ss(line);
+                int id;
+                string name, event, checkedStr, time;
+                ss >> id;
+                ss.ignore();
+                getline(ss, name, ',');
+                getline(ss, event, ',');
+                getline(ss, checkedStr, ',');
+                getline(ss, time, ',');
+
+                string checked = (checkedStr == "1") ? "Yes" : "No";
+
+                cout << left << setw(10) << id
+                    << setw(20) << name
+                    << setw(20) << event
+                    << setw(15) << checked
+                    << setw(20) << time << endl;
+            }
+            file.close();
             break;
+        }
+
         case 3:
             loadVenues("venues.txt");
             break;
+
         case 4:
             generateReport();
             break;
+
         case 5:
             cout << "Returning to main menu...\n";
             break;
+
         default:
             cout << "Invalid choice!\n";
         }
