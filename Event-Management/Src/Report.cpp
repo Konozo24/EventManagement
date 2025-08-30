@@ -108,7 +108,7 @@ void Report::generateReport() {
     cout << "\nReport generated successfully: report.txt\n";
 }
 
-void Report::showMenu() {
+void Report::displayReportMenu() {
     int choice;
     do {
         cout << "\n===== Event Reporting Menu =====\n";
