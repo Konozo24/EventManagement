@@ -28,10 +28,9 @@ static bool isAllDigits(const string& s) {
     return true;
 }
 
-// reads integer with validation; if allowCancel == true and user types "cancel" returns false
+
 static bool readInt(const string& prompt, int& out, int minVal, int maxVal, bool allowCancel = false) {
-    bool done1 = false;
-    while (!done1) {
+    while (true) {
         cout << prompt;
         string line; getline(cin, line);
 
@@ -59,10 +58,9 @@ static bool readInt(const string& prompt, int& out, int minVal, int maxVal, bool
     }
 }
 
-// read double with validation. If allowBlankKeep == true and user presses Enter (empty string), set out = currentVal and return true.
+
 static bool readDouble(const string& prompt, double& out, double minVal, double maxVal, bool allowBlankKeep = false, double currentVal = 0.0) {
-    bool done2 = false;
-    while (!done2) {
+    while (true) {
         cout << prompt;
         string line; getline(cin, line);
 
@@ -128,7 +126,7 @@ static void loadProductsFromFile() {
             products.push_back(mi);
         }
         catch (...) {
-            
+           
         }
     }
     file.close();
@@ -137,7 +135,7 @@ static void loadProductsFromFile() {
 static void saveProductsToFile() {
     ofstream file(PRODUCTS_FILE);
     for (const auto& p : products) {
-        int q = p.quantity < 0 ? 0 : p.quantity; 
+        int q = p.quantity < 0 ? 0 : p.quantity;
         file << p.eventID << "|" << p.name << "|" << fixed << setprecision(2) << p.price << "|" << q << "\n";
     }
     file.close();
@@ -222,7 +220,11 @@ void marketingAdmin() {
             string pick; getline(cin, pick);
             if (pick == "cancel") { clearScreen(); continue; }
             if (!isAllDigits(pick)) { clearScreen(); continue; }
-            int idx = stoi(pick) - 1;
+            int idx = 0;
+            try {
+                idx = stoi(pick) - 1;
+            }
+            catch (...) { clearScreen(); continue; }
             if (idx < 0 || idx >= (int)products.size()) { clearScreen(); continue; }
 
             MarketingItem& p = products[idx];
@@ -277,14 +279,12 @@ void marketingAdmin() {
         }
         else {
             clearScreen();
-            
         }
     }
 }
 
 // ---------------- User ----------------
 void marketingUser() {
-
     bool done3a = false;
     while (!done3a) {
         clearScreen();
@@ -335,7 +335,11 @@ void marketingUser() {
         string pick; getline(cin, pick);
         if (pick == "cancel") { clearScreen(); continue; }
         if (!isAllDigits(pick)) { clearScreen(); continue; }
-        int idx = stoi(pick) - 1;
+        int idx = 0;
+        try {
+            idx = stoi(pick) - 1;
+        }
+        catch (...) { clearScreen(); continue; }
         if (idx < 0 || idx >= (int)evProducts.size()) { clearScreen(); continue; }
 
         MarketingItem* selected = evProducts[idx];
@@ -345,7 +349,7 @@ void marketingUser() {
         if (!readInt("Enter quantity (or 'cancel'): ", qty, 1, selected->quantity, true)) { clearScreen(); continue; }
 
         selected->quantity -= qty;
-        if (selected->quantity < 0) selected->quantity = 0; // clamp safety
+        if (selected->quantity < 0) selected->quantity = 0;
         saveProductsToFile();
 
         // Confirmation screen
