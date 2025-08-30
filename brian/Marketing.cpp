@@ -30,7 +30,8 @@ static bool isAllDigits(const string& s) {
 
 // reads integer with validation; if allowCancel == true and user types "cancel" returns false
 static bool readInt(const string& prompt, int& out, int minVal, int maxVal, bool allowCancel = false) {
-    while (true) {
+    bool done1 = false;
+    while (!done1) {
         cout << prompt;
         string line; getline(cin, line);
 
@@ -60,7 +61,8 @@ static bool readInt(const string& prompt, int& out, int minVal, int maxVal, bool
 
 // read double with validation. If allowBlankKeep == true and user presses Enter (empty string), set out = currentVal and return true.
 static bool readDouble(const string& prompt, double& out, double minVal, double maxVal, bool allowBlankKeep = false, double currentVal = 0.0) {
-    while (true) {
+    bool done2 = false;
+    while (!done2) {
         cout << prompt;
         string line; getline(cin, line);
 
@@ -143,7 +145,8 @@ static void saveProductsToFile() {
 
 // ---------------- Admin ----------------
 void marketingAdmin() {
-    while (true) {
+    bool done3 = false;
+    while (!done3) {
         clearScreen();
         cout << "\n" << string(60, '=') << endl;
         cout << "               MARKETING ADMIN MENU" << endl;
@@ -281,7 +284,9 @@ void marketingAdmin() {
 
 // ---------------- User ----------------
 void marketingUser() {
-    while (true) {
+
+    bool done3a = false;
+    while (!done3a) {
         clearScreen();
         loadEventsFromFile();
 
