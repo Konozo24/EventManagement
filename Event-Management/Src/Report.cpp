@@ -1,4 +1,5 @@
 #include "Report.h"
+#include "Utils.h"
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -198,7 +199,7 @@ void Report::showMenu() {
         if (choice != 5) {
             cout << "\nPress Enter to continue...";
             cin.get();
-            system("cls"); // Windows clear screen
+            clearScreen();
         }
 
     } while (choice != 5);
