@@ -57,7 +57,7 @@ int main() {
         case 6:  viewReceipts(); break;
         case 7:  viewFeedback(); break;
         case 8:  tickets(); break;
-        case 9:  displayReportMenu(); break;
+        case 9:  showMenu(); break;
         case 10: marketingUser(); break;   
         case 11: marketingAdmin(); break;  
         case 0:  cout << "\nThank you for using the system!" << endl; break;
