@@ -4,12 +4,13 @@
 
 #include <string>
 
-const string VENUES_FILE = "venues.txt";
-const string EVENTS_FILE = "events.txt";
-const string GUESTS_FILE = "guests.txt";
-const string CHECKIN_LOG_FILE = "checkin_log.txt";   
-const string REGISTRATION_FILE = "registration.txt";
-const string RECEIPT_FILE = "receipt.txt";
-const string FEEDBACK_FILE = "feedback.txt";
+const std::string VENUES_FILE = "venues.txt";
+const std::string EVENTS_FILE = "events.txt";
+const std::string GUESTS_FILE = "guests.txt";
+const std::string CHECKIN_LOG_FILE = "checkin_log.txt";
+const std::string REGISTRATION_FILE = "registration.txt";
+const std::string RECEIPT_FILE = "receipt.txt";
+const std::string FEEDBACK_FILE = "feedback.txt";
+const std::string PRODUCTS_FILE = "products.txt";   
 
 #endif
