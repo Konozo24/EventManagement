@@ -23,7 +23,6 @@ struct Registration {
 extern vector<Registration> registrations;
 
 // File handling
-void initializeDefaultRegistration();
 void loadRegistrationFromFile();
 void saveRegistrationToFile();
 
