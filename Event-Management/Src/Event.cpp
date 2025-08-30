@@ -108,11 +108,9 @@ void displayEventsForRegistration() {
     }
 
     if (!hasAvailable) {
-        cout << "\n" << string(80, '=') << endl;
-        cout << "                      AVAILABLE EVENTS" << endl;
-        cout << string(80, '=') << endl;
-        cout << "No events available for registration.\n";
-        cout << string(80, '-') << endl;
+        
+        cout << "\t\tNo events available for registration.\n";
+       
     }
 
     cout << string(80, '=') << endl;
