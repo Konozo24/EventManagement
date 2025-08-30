@@ -1,5 +1,6 @@
 #include "Tickets.h"
 #include "Event.h"
+#include "Guest.h"
 #include "Registration.h"
 #include "Utils.h"
 #include "Constants.h"
@@ -80,7 +81,8 @@ void tickets() {
     ev->ticketAmount -= ticketsRequested;
     saveEventsToFile();   // update event list with reduced tickets
 
-
+    // When registering a user
+    loadRegistrationFromFile(); // make sure nextRegistrationID is correct
     // Generate Registration ID
     string newRegID = generateRegistrationID(); // "R#" auto-generated
 
@@ -98,7 +100,12 @@ void tickets() {
 
     // Process payment immediately
     processPayment(newReg);
-    
+
+
+    string newGuestID = generateGuestID();
+    Guest newGuest(newGuestID, userName, ev->eventName);
+    guests.push_back(newGuest);
+    saveGuestsToFile();  // Save to guests.txt
 
     // Save to file
     registrations.push_back(newReg);
