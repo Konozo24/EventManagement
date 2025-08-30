@@ -29,8 +29,10 @@ void loadVenuesFromFile();
 void saveVenuesToFile();
 void initializeDefaultVenues();
 int validateVenueSelection();
+int validateBookedVenueSelection();
 
 // Display
 void displayAvailableVenues();
+void displayAllVenues();
 
 #endif
