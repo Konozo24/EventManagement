@@ -4,5 +4,6 @@
 
 void monitorEvent();
 void displayCheckInStatistics();
+void markVenueAsAvailable();
 
 #endif
