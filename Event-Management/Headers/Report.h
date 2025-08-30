@@ -1,4 +1,3 @@
-#pragma once
 #ifndef REPORT_H
 #define REPORT_H
 
@@ -19,9 +18,9 @@ class Report {
 private:
     vector<BookingSummary> summaries;
 
-    void loadRegistration(const string &filename);
-    void loadGuests(const string &filename);
-    void loadVenues(const string &filename);
+    void loadRegistration(const string& filename);
+    void loadGuests(const string& filename);
+    void loadVenues(const string& filename);
 
 public:
     void generateReport();
@@ -29,4 +28,3 @@ public:
 };
 
 #endif
-
