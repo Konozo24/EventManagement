@@ -10,26 +10,23 @@ using namespace std;
 struct BookingSummary {
     string eventName;
     string date;
-    string venue;
     int totalGuests;
     int checkedInGuests;
+    string venue;
 };
 
 class Report {
 private:
     vector<BookingSummary> summaries;
 
+    void loadRegistration(const string &filename);
+    void loadGuests(const string &filename);
+    void loadVenues(const string &filename);
+
 public:
-    void loadRegistrationData(const string& filename);
-    void loadCheckInData(const string& filename);
-    void loadVenueData(const string& filename);
-    void displayAllEventsSummary();
-    void displayAttendanceReport();
-    void displayVenueUsage();
-    void exportReportToFile(const string& filename);
+    void generateReport();
+    void showMenu();
 };
 
-// function to show the menu
-void displayReportMenu();
-
 #endif
+
