@@ -131,6 +131,31 @@ void displayAvailableVenues() {
     cout << string(80, '=') << endl;
 }
 
+void displayAllVenues() {
+    cout << "\n" << string(80, '=') << endl;
+    cout << "                      VENUES" << endl;
+    cout << string(80, '=') << endl;
+    cout << left << setw(5) << "ID"
+        << setw(40) << "Venue Name"
+        << setw(10) << "Capacity"
+        << setw(30) << "Location"
+        << setw(15) << "Cost (RM)"
+        << setw(10) << "Status" << endl;
+    cout << string(80, '-') << endl;
+
+    for (const auto& venue : venues) {
+        cout << left << setw(6) << ("V" + to_string(venue.venueID))
+            << setw(40) << venue.name
+            << setw(10) << venue.capacity
+            << setw(30) << venue.location
+            << "RM" << setw(10) << fixed << setprecision(2) << venue.cost
+            << setw(10) << (venue.isBooked ? "Booked" : "Available") << endl;
+    }
+
+    cout << string(80, '=') << endl;
+}
+
+
 // Check if venue is available (for other modules to use)
 bool isVenueAvailable(int venueID) {
     loadVenuesFromFile();
@@ -188,6 +213,58 @@ int validateVenueSelection() {
                 found = true;
                 if (venue.isBooked) {
                     cout << "Sorry, this venue is already booked. Please select another venue." << endl;
+                    break;
+                }
+                else {
+                    validInput = true;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            cout << "Venue ID not found! Please enter a valid Venue ID." << endl;
+        }
+
+    } while (!validInput);
+
+    return venueID;
+}
+
+int validateBookedVenueSelection() {
+    string input;
+    int venueID;
+    bool validInput = false;
+
+    do {
+        cout << "Enter Venue ID to mark as available (e.g., V1) or 0 to cancel: ";
+        getline(cin, input);
+
+        if (input == "0") {
+            clearScreen();
+            return 0;
+        }
+
+        if (input.size() > 1 && (input[0] == 'V' || input[0] == 'v')) {
+            try {
+                venueID = stoi(input.substr(1)); // remove "V"
+            }
+            catch (...) {
+                cout << "Invalid format! Please enter like V1." << endl;
+                continue;
+            }
+        }
+        else {
+            cout << "Invalid format! Please enter like V1." << endl;
+            continue;
+        }
+
+        bool found = false;
+        for (const auto& venue : venues) {
+            if (venue.venueID == venueID) {
+                found = true;
+                if (!venue.isBooked) {
+                    cout << "Venue is already available. Please select a booked venue." << endl;
                     break;
                 }
                 else {
