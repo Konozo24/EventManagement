@@ -25,22 +25,12 @@ Registration::Registration(const string& regId, const string& evId, const string
 }
 
 
-// Initialize dummy events if file not found
-void initializeDefaultRegistration() {
-    registrations.clear();
-
-    registrations.push_back(Registration("R" + to_string(nextRegistrationID++), "E1", "Concert A", "10-12-2025", "Alice", 2, 200.0));
-    registrations.push_back(Registration("R" + to_string(nextRegistrationID++), "E2", "Concert B", "11-12-2025", "Bob", 1, 120.0));
-    registrations.push_back(Registration("R" + to_string(nextRegistrationID++), "E3", "Concert C", "12-12-2025", "Charlie", 3, 450.0));
-
-    saveRegistrationToFile();
-}
-
 void loadRegistrationFromFile() {
     ifstream file(REGISTRATION_FILE);
     if (!file.is_open()) {
-        cout << "Creating new registration file with default events..." << endl;
-        initializeDefaultRegistration();
+        // File doesn't exist yet
+        registrations.clear();
+        nextRegistrationID = 1;
         return;
     }
 
@@ -73,6 +63,9 @@ void loadRegistrationFromFile() {
     }
 
     file.close();
+
+    // Update nextRegistrationID 
+    nextRegistrationID = maxID + 1;
 }
 
 void saveRegistrationToFile() {
@@ -117,7 +110,7 @@ void displayRegistration() {
 }
 
 string generateRegistrationID() {
-    // Caller should have called loadRegistrationFromFile() earlier so nextRegistrationID is correct.
+  
     string id = "R" + to_string(nextRegistrationID++);
     return id;
 }
