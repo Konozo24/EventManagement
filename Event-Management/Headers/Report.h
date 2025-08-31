@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unordered_map>
 using namespace std;
 
 struct BookingSummary {
@@ -21,6 +22,10 @@ private:
     void loadRegistration(const string& filename);
     void loadGuests(const string& filename);
     void loadVenues(const string& filename);
+    void loadEvents(const string& filename);
+
+    unordered_map<string, string> venueMap;      // venueID -> venueName
+    unordered_map<string, string> eventVenueMap; // eventID -> venueID
 
 public:
     void generateReport();
