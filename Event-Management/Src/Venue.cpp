@@ -18,9 +18,9 @@ namespace {
 
 
 
-Venue::Venue() : venueID(0), name(""), capacity(0), location(""), cost(0.0), isBooked(false), usageCount(0) {}
+Venue::Venue() : venueID("0"), name(""), capacity(0), location(""), cost(0.0), isBooked(false), usageCount(0) {}
 
-Venue::Venue(int id, const string& venueName, int cap, const string& loc, double venueCost)
+Venue::Venue(const string& id, const string& venueName, int cap, const string& loc, double venueCost)
     : venueID(id), name(venueName), capacity(cap), location(loc), cost(venueCost), isBooked(false), usageCount(0) {
 }
 
@@ -28,13 +28,13 @@ void initializeDefaultVenues() {
     venues.clear();
     nextVenueID = 1; // reset when creating defaults
 
-    venues.push_back(Venue(nextVenueID++, "Skyline Grand Ballroom", 400, "Downtown City Center", 18000.0));
-    venues.push_back(Venue(nextVenueID++, "Innovation Hub Conference Hall", 250, "Tech Business Park", 12000.0));
-    venues.push_back(Venue(nextVenueID++, "Garden Pavilion", 300, "Botanical Gardens", 14000.0));
-    venues.push_back(Venue(nextVenueID++, "Executive Boardroom", 50, "Corporate Tower", 6000.0));
-    venues.push_back(Venue(nextVenueID++, "University Auditorium", 600, "City University Campus", 20000.0));
-    venues.push_back(Venue(nextVenueID++, "Rooftop Terrace", 150, "Luxury Hotel Downtown", 10000.0));
-    venues.push_back(Venue(nextVenueID++, "Tech Expo Hall", 800, "Convention Center", 25000.0));
+    venues.push_back(Venue("V" + to_string(nextVenueID++), "Skyline Grand Ballroom", 400, "Downtown City Center", 18000.0));
+    venues.push_back(Venue("V" + to_string(nextVenueID++), "Innovation Hub Conference Hall", 250, "Tech Business Park", 12000.0));
+    venues.push_back(Venue("V" + to_string(nextVenueID++), "Garden Pavilion", 300, "Botanical Gardens", 14000.0));
+    venues.push_back(Venue("V" + to_string(nextVenueID++), "Executive Boardroom", 50, "Corporate Tower", 6000.0));
+    venues.push_back(Venue("V" + to_string(nextVenueID++), "University Auditorium", 600, "City University Campus", 20000.0));
+    venues.push_back(Venue("V" + to_string(nextVenueID++), "Rooftop Terrace", 150, "Luxury Hotel Downtown", 10000.0));
+    venues.push_back(Venue("V" + to_string(nextVenueID++), "Tech Expo Hall", 800, "Convention Center", 25000.0));
 
     saveVenuesToFile();
 }
@@ -64,7 +64,7 @@ void loadVenuesFromFile() {
 
         if (tokens.size() >= 6) {
             Venue venue;
-            venue.venueID = stoi(tokens[0]);
+            venue.venueID = tokens[0];
             venue.name = tokens[1];
             venue.capacity = stoi(tokens[2]);
             venue.location = tokens[3];
@@ -73,8 +73,12 @@ void loadVenuesFromFile() {
             venue.usageCount = (tokens.size() > 6) ? stoi(tokens[6]) : 0;
             venues.push_back(venue);
 
-            if (venue.venueID >= nextVenueID) {
-                nextVenueID = venue.venueID + 1; // keep ID increasing
+            // Extract numeric part of ID to update nextVenueID
+            if (venue.venueID.size() > 1 && (venue.venueID[0] == 'V' || venue.venueID[0] == 'v')) {
+                int idNum = stoi(venue.venueID.substr(1));
+                if (idNum >= nextVenueID) {
+                    nextVenueID = idNum + 1;
+                }
             }
         }
     }
@@ -115,7 +119,7 @@ void displayAvailableVenues() {
     bool hasAvailable = false;
     for (const auto& venue : venues) {
         if (!venue.isBooked) {
-            cout << left << setw(6) << ("V" + to_string(venue.venueID))
+            cout << left << setw(6) << venue.venueID
                 << setw(40) << venue.name
                 << setw(10) << venue.capacity
                 << setw(30) << venue.location
@@ -144,7 +148,7 @@ void displayAllVenues() {
     cout << string(80, '-') << endl;
 
     for (const auto& venue : venues) {
-        cout << left << setw(6) << ("V" + to_string(venue.venueID))
+        cout << left << setw(6) << venue.venueID
             << setw(40) << venue.name
             << setw(10) << venue.capacity
             << setw(30) << venue.location
@@ -157,7 +161,7 @@ void displayAllVenues() {
 
 
 // Check if venue is available (for other modules to use)
-bool isVenueAvailable(int venueID) {
+bool isVenueAvailable(const string& venueID) {
     loadVenuesFromFile();
     for (const auto& venue : venues) {
         if (venue.venueID == venueID && !venue.isBooked) {
@@ -168,7 +172,7 @@ bool isVenueAvailable(int venueID) {
 }
 
 // Get venue details (for other modules to use)
-Venue getVenueDetails(int venueID) {
+Venue getVenueDetails(const string& venueID) {
     loadVenuesFromFile();
     for (const auto& venue : venues) {
         if (venue.venueID == venueID) {
@@ -178,10 +182,19 @@ Venue getVenueDetails(int venueID) {
     return Venue(); // Return empty venue if not found
 }
 
+bool isValidVenueFormat(const string& input) {
+    if (input.size() < 2 || toupper(input[0]) != 'V') {
+        return false;
+    }
+    for (size_t i = 1; i < input.size(); i++) {
+        if (!isdigit(input[i])) return false;
+    }
+    return true;
+}
+
 // Validate venue selection - Your input validation
-int validateVenueSelection() {
+string validateVenueSelection() {
     string input;
-    int venueID;
     bool validInput = false;
 
     do {
@@ -190,26 +203,18 @@ int validateVenueSelection() {
 
         if (input == "0") {
             clearScreen();
-            return 0;
+            return "0";
         }
 
-        if (input.size() > 1 && (input[0] == 'V' || input[0] == 'v')) {
-            try {
-                venueID = stoi(input.substr(1)); // remove "V"
-            }
-            catch (...) {
-                cout << "Invalid format! Please enter like V1." << endl;
-                continue;
-            }
-        }
-        else {
-            cout << "Invalid format! Please enter like V001." << endl;
+        if (!isValidVenueFormat(input)) {
+            cout << "Invalid format! Please enter Venue ID like V1, V2...\n";
             continue;
         }
 
+        
         bool found = false;
         for (const auto& venue : venues) {
-            if (venue.venueID == venueID) {
+            if (venue.venueID == input) {
                 found = true;
                 if (venue.isBooked) {
                     cout << "Sorry, this venue is already booked. Please select another venue." << endl;
@@ -228,12 +233,12 @@ int validateVenueSelection() {
 
     } while (!validInput);
 
-    return venueID;
+    return input;
 }
 
-int validateBookedVenueSelection() {
+string validateBookedVenueSelection() {
     string input;
-    int venueID;
+ 
     bool validInput = false;
 
     do {
@@ -242,26 +247,17 @@ int validateBookedVenueSelection() {
 
         if (input == "0") {
             clearScreen();
-            return 0;
+            return "0";
         }
 
-        if (input.size() > 1 && (input[0] == 'V' || input[0] == 'v')) {
-            try {
-                venueID = stoi(input.substr(1)); // remove "V"
-            }
-            catch (...) {
-                cout << "Invalid format! Please enter like V1." << endl;
-                continue;
-            }
-        }
-        else {
-            cout << "Invalid format! Please enter like V1." << endl;
+        if (!isValidVenueFormat(input)) {
+            cout << "Invalid format! Please enter Venue ID like V1, V2...\n";
             continue;
         }
 
         bool found = false;
         for (const auto& venue : venues) {
-            if (venue.venueID == venueID) {
+            if (venue.venueID == input) {
                 found = true;
                 if (!venue.isBooked) {
                     cout << "Venue is already available. Please select a booked venue." << endl;
@@ -280,5 +276,5 @@ int validateBookedVenueSelection() {
 
     } while (!validInput);
 
-    return venueID;
+    return input;
 }
