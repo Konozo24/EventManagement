@@ -40,12 +40,12 @@ void markVenueAsAvailable() {
 
     displayAllVenues();
 
-    int venueID;
+    string venueID;
     bool success = false;
 
     do {
         venueID = validateBookedVenueSelection(); // returns 0 if user cancels
-        if (venueID == 0) {
+        if (venueID == "0") {
             cout << "Cancelled. Returning to menu...\n";
             return;
         }
@@ -59,11 +59,10 @@ void markVenueAsAvailable() {
                 else {
                     venue.isBooked = false; // mark as available
 
-                    // Remove associated events
-                    string venueStr = "V" + to_string(venueID);
+                    
                     events.erase(
                         remove_if(events.begin(), events.end(),
-                            [&](const Event& ev) { return ev.venueID == venueStr; }),
+                            [&](const Event& ev) { return ev.venueID == venueID; }),
                         events.end()
                     );
 
