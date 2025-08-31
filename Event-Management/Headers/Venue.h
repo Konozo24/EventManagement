@@ -6,7 +6,7 @@
 using namespace std;
 
 struct Venue {
-    int venueID;
+    string venueID;
     string name;
     int capacity;
     string location;
@@ -15,7 +15,7 @@ struct Venue {
     int usageCount;
 
     Venue();
-    Venue(int id, const string& venueName, int cap, const string& loc, double venueCost);
+    Venue(const string& id, const string& venueName, int cap, const string& loc, double venueCost);
 };
 
 extern vector<Venue> venues;   // declare global
@@ -28,8 +28,9 @@ Venue getVenueDetails(int venueID);
 void loadVenuesFromFile();
 void saveVenuesToFile();
 void initializeDefaultVenues();
-int validateVenueSelection();
-int validateBookedVenueSelection();
+bool isValidVenueFormat(const string& input);
+string validateVenueSelection();
+string validateBookedVenueSelection();
 
 // Display
 void displayAvailableVenues();
