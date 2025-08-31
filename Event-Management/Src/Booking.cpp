@@ -1,173 +1,53 @@
-#include <iostream>
-#include "Venue.h"
-#include "Event.h"
-#include "Booking.h"
-#include "Utils.h"
-#include "Constants.h"
-#include <vector>
-#include <string>
-#include <fstream> 
-
-using namespace std;
-
-
-// MAIN FUNCTION: Event Booking on Dates & Logistics
-void bookEvent() {
-    cout << "\n" << string(60, '=') << endl;
-    cout << "               EVENT BOOKING SYSTEM" << endl;
-    cout << string(60, '=') << endl;
-
-    // Load venues from file
-    loadVenuesFromFile();
-
-    // Display available venues
-    displayAvailableVenues();
-
-    // Check if any venues are available
-    bool hasAvailable = false;
-    for (const auto& venue : venues) {
-        if (!venue.isBooked) {
-            hasAvailable = true;
-            break;
-        }
-    }
-
-    if (!hasAvailable) {
-        cout << "No venues are currently available for booking." << endl;
-        cout << "Press Enter to return to main menu...";
-        cin.get();
+void Report::loadRegistration(const string& filename) {
+    ifstream file(filename);
+    if (!file) {
+        cerr << "Error: Cannot open " << filename << endl;
         return;
     }
 
-    // Get event details with validation
-    string eventName, eventDate, vendorDetails;
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string regId, eventId, eventName, date, username, tickets, cost;
 
-    // Event name validation
-    do {
-        cout << "\nEnter Event Name (or 'cancel' to exit): ";
-        getline(cin, eventName);
+        getline(ss, regId, '|');
+        getline(ss, eventId, '|');
+        getline(ss, eventName, '|');
+        getline(ss, date, '|');
+        getline(ss, username, '|');
+        getline(ss, tickets, '|');
+        getline(ss, cost, '|');
 
-        if (eventName == "cancel") {
-            clearScreen();
-            return;
-        }
+        // Format as "EventName (EventID)"
+        string fullEventName = eventName + " (" + eventId + ")";
 
-        if (eventName.empty() || eventName.length() < 3) {
-            cout << "Event name must be at least 3 characters long!" << endl;
-            continue;
-        }
-
-        // valid -> stop loop
-        break;
-
-    } while (eventName.empty() || eventName.length() < 3);
-
-
-    // Event date validation
-    do {
-        cout << "Enter Event Date (DD-MM-YYYY): ";
-        getline(cin, eventDate);
-
-        if (!isValidDateFormat(eventDate)) {
-            cout << "Invalid date format! Please use DD-MM-YYYY format." << endl;
-            cout << "Example: 15-08-2025" << endl;
-            continue;
-        }
-
-        // valid -> stop loop
-        break;
-
-    } while (!isValidDateFormat(eventDate));
-
-    // Venue selection with validation
-    int selectedVenueID = validateVenueSelection();
-    if (selectedVenueID == 0) {
-        cout << "Booking cancelled." << endl;
-        return;
-    }
-
-    // Get vendor details
-    cout << "\nEnter Vendor Details (press Enter for none): ";
-    getline(cin, vendorDetails);
-    if (vendorDetails.empty()) {
-        vendorDetails = "No vendors assigned";
-    }
-
-    double ticketPrice = 0.0;
-    bool validPrice = false;
-
-    do {
-        cout << "Enter Ticket Price: ";
-        string priceInput;
-        getline(cin, priceInput);
-
-        try {
-            size_t idx;
-            ticketPrice = stod(priceInput, &idx); // string → double
-
-            if (idx != priceInput.size()) {
-                throw invalid_argument("Invalid characters after number");
-            }
-
-            if (ticketPrice > 0) {
-                validPrice = true; 
-            }
-            else {
-                cout << "Ticket price must be greater than 0!\n";
+        // Find if this event already exists in summaries
+        bool found = false;
+        for (auto& s : summaries) {
+            if (s.eventName == fullEventName) {
+                found = true;
+                break;
             }
         }
-        catch (invalid_argument&) {
-            cout << "Invalid input! Enter a valid number (e.g., 50 or 49.90).\n";
-        }
-        catch (out_of_range&) {
-            cout << "Number too large! Try again.\n";
-        }
 
-    } while (!validPrice);
-    
+        if (!found) {
+            BookingSummary summary;
+            summary.eventName = fullEventName;
+            summary.date = date;
 
+            // Resolve venue
+            string venueID = eventVenueMap[eventId];
+            if (!venueID.empty() && venueMap.find(venueID) != venueMap.end()) {
+                summary.venue = venueMap[venueID];
+            } else {
+                summary.venue = "N/A";
+            }
 
-    // Find venue capacity & Update venue booking status
-    int ticketAmount = 0;
-    for (auto& venue : venues) {
-        if (venue.venueID == selectedVenueID) {
-            venue.isBooked = true;
-            venue.usageCount++;
-            ticketAmount = venue.capacity;  // capacity comes from Venue
-            break;
+            summary.totalGuests = 0;
+            summary.checkedInGuests = 0;
+
+            summaries.push_back(summary);
         }
     }
-
-    // Generate event ID (auto-increment)
-    int nextEventNum = events.empty() ? 1 : stoi(events.back().eventID.substr(1)) + 1;
-    string newEventID = "E" + to_string(nextEventNum);
-
-    // Create new Event object
-    Event newEvent(newEventID, eventName, eventDate, "V" + to_string(selectedVenueID),
-        vendorDetails, ticketPrice, ticketAmount);
-
-    // Add to global vector
-    events.push_back(newEvent);
-
-    // Save all events to file
-    saveEventsToFile();
-
-    // Save updated venues
-    saveVenuesToFile();
-
-    // Display booking confirmation
-    cout << "\n" << string(60, '=') << endl;
-    cout << "              BOOKING CONFIRMATION" << endl;
-    cout << string(60, '=') << endl;
-    cout << "Event ID: " << newEventID << endl;
-    cout << "Event Name: " << eventName << endl;
-    cout << "Event Date: " << eventDate << endl;
-    cout << "Venue ID: V" << selectedVenueID << endl;
-    cout << "Vendor Details: " << vendorDetails << endl;
-    cout << "Status: Successfully Booked!" << endl;
-    cout << string(60, '=') << endl;
-
-    cout << "\nPress Enter to continue...";
-    cin.get();
-    clearScreen();
+    file.close();
 }
