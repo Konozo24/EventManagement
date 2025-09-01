@@ -3,6 +3,8 @@
 #include "Event.h"
 #include "Utils.h"
 #include <iostream>
+#include <vector>
+#include <map>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -126,6 +128,72 @@ void viewUserHistory(const string& guestID) {
     cout << "        EVENT HISTORY FOR GUEST: " << guestID << endl;
     cout << string(50, '=') << endl;
 
+    // ===== Step 1: Read receipt.txt once into a map =====
+    ifstream file("receipt.txt");
+    map<string, vector<string>> purchases; // regID -> items
+    map<string, string> paymentMethods;    // regID -> payment method
+
+    if (file.is_open()) {
+        string line, currentRegID;
+        bool productSection = false;
+
+        while (getline(file, line)) {
+            if (line.find("Receipt #") != string::npos) {
+                currentRegID.clear();
+                productSection = false;
+            }
+
+            if (line.find("Registration ID") != string::npos) {
+                size_t pos = line.find(":");
+                if (pos != string::npos) {
+                    currentRegID = line.substr(pos + 1);
+                    // trim spaces
+                    currentRegID.erase(0, currentRegID.find_first_not_of(" \t"));
+                }
+            }
+
+            if (!currentRegID.empty()) {
+                if (line.find("Product") != string::npos &&
+                    line.find("Product Total") == string::npos) // ignore totals
+                {
+                    size_t pos = line.find(":");
+                    if (pos != string::npos) {
+                        string item = line.substr(pos + 1);
+                        item.erase(0, item.find_first_not_of(" \t")); // trim left spaces
+
+                        if (item == "None") {
+                            purchases[currentRegID].push_back("None");
+                        }
+                        else if (!item.empty()) {
+                            purchases[currentRegID].push_back(item);
+                        }
+                    }
+                }
+                else if (productSection) {
+                    if (line.find("Ticket Price") != string::npos ||
+                        line.find("Product Total") != string::npos ||
+                        line.find("Total") != string::npos) {
+                        productSection = false;
+                    }
+                    else {
+                        purchases[currentRegID].push_back(line);
+                    }
+                }
+
+                if (line.find("Payment Method") != string::npos) {
+                    size_t pos = line.find(":");
+                    if (pos != string::npos) {
+                        string method = line.substr(pos + 1);
+                        method.erase(0, method.find_first_not_of(" \t"));
+                        paymentMethods[currentRegID] = method;
+                    }
+                }
+            }
+        }
+        file.close();
+    }
+
+
     bool found = false;
     for (const auto& reg : registrations) {
         if (reg.guestID == guestID) {
@@ -135,6 +203,24 @@ void viewUserHistory(const string& guestID) {
             cout << "Event Date      : " << reg.eventDate << endl;
             cout << "Tickets Bought  : " << reg.ticketsBought << endl;
             cout << "Total Cost      : RM" << fixed << setprecision(2) << reg.registrationCost << endl;
+          
+            // Show purchases
+            cout << "Purchased Items:\n";
+            if (purchases.count(reg.registrationID)) {
+                for (const auto& item : purchases[reg.registrationID]) {
+                    cout << "   " << item << "\n";
+                }
+            }
+            else {
+                cout << "   None\n";
+            }
+
+            // Show payment method
+            if (paymentMethods.count(reg.registrationID)) {
+                cout << "Payment Method  : " << paymentMethods[reg.registrationID] << "\n";
+            }
+            
+
             cout << string(50, '-') << endl;
             found = true;
         }
