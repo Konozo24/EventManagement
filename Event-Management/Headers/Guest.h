@@ -31,5 +31,6 @@ string generateGuestID();
 
 // Extra utilities (for Payment & Feedback)
 bool verifyGuest(const string& guestID, const string& name);
+Guest* findGuestByID(const string& id);
 
 #endif
