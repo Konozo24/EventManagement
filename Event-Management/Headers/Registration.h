@@ -10,6 +10,7 @@ struct Registration {
     string eventID;          // link to Event (e.g. "E1")
     string eventName;
 	string eventDate;   
+    string guestID;
     string userName;         // who registered
     int ticketsBought;       // number of tickets bought
 	double registrationCost; // total cost
@@ -17,7 +18,9 @@ struct Registration {
 
 
     Registration();
-    Registration(const string& regId, const string& eventId, const string& eventName, const string& eventDate, const string& userName, int tickets, double registrationCost);
+    Registration(const string& regId, const string& eventId, const string& eventName,
+        const string& eventDate, const string& guestID, const string& userName,
+        int tickets, double cost);
 };
 
 extern vector<Registration> registrations;
@@ -29,8 +32,14 @@ void saveRegistrationToFile();
 // Display
 void displayRegistration();
 
+// GenerateID
 string generateRegistrationID();
 
+// Event history 
+void viewUserHistory(const string& userName);
+
+//Validation
+string validateRegistrationIDInput();
 
 
 #endif
