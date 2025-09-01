@@ -169,6 +169,7 @@ void monitorEvent() {
 
         case 4:
             // Mark venue as available
+            clearScreen();
             markVenueAsAvailable();
             cout << "\nPress Enter to continue...";
             cin.get();
