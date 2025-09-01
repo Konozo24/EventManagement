@@ -37,5 +37,6 @@ void displayEventsForRegistration();
 
 // Searching
 Event* findEventByName(const string& name);
+Event* findEventByID(const string& eventID);
 
 #endif
