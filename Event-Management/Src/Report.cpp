@@ -1,35 +1,26 @@
 #include "Report.h"
+#include "Guest.h"
 
+#include "Venue.h"
 #include "Utils.h"
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
 
+
+
 // Load Venues
 void Report::loadVenues(const string& filename) {
-    ifstream file(filename);
-    if (!file) {
-        cerr << "Error: Cannot open " << filename << endl;
-        return;
+    // Make sure global venues are loaded
+    loadVenuesFromFile();
+
+    // Clear and rebuild venueMap
+    venueMap.clear();
+    for (const auto& v : venues) {
+        venueMap[v.venueID] = v.name;
     }
-
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string venueID, venueName, capacity, location, cost, booked, eventCount;
-
-        getline(ss, venueID, '|');
-        getline(ss, venueName, '|');
-        getline(ss, capacity, '|');
-        getline(ss, location, '|');
-        getline(ss, cost, '|');
-        getline(ss, booked, '|');
-        getline(ss, eventCount, '|');
-
-        venueMap[venueID] = venueName;  // store mapping
-    }
-    file.close();
+    
 }
 
 // Load Events
@@ -113,38 +104,82 @@ void Report::loadRegistration(const string& filename) {
     file.close();
 }
 
-void Report::loadGuests(const string& filename) {
-    ifstream file(filename);
-    if (!file) {
-        cerr << "Error: Cannot open " << filename << endl;
-        return;
+void Report::loadGuests() {
+    // Ensure global guest list is loaded
+    loadGuestsFromFile();
+
+    // Reset summary counts first
+    for (auto& s : summaries) {
+        s.totalGuests = 0;
+        s.checkedInGuests = 0;
     }
 
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string guestId, name, event, checkedStr, time;
-
-        getline(ss, guestId, '|');   // G1
-        getline(ss, name, '|');      // Ming
-        getline(ss, event, '|');     // Lebron Tales
-        getline(ss, checkedStr, '|');// 1
-        getline(ss, time, '|');      // Sun Aug ...
-
-        bool checked = (checkedStr == "1");
-
+    // Count based on loaded guests
+    for (const auto& g : guests) {
         for (auto& s : summaries) {
-            // Compare only the event name part (before " (E1)")
             string summaryNameOnly = s.eventName.substr(0, s.eventName.find(" ("));
-            if (summaryNameOnly == event) {
+            if (summaryNameOnly == g.eventName) {
                 s.totalGuests++;
-                if (checked) s.checkedInGuests++;
+                if (g.checkedIn) s.checkedInGuests++;
             }
         }
     }
-    file.close();
 }
 
+void Report::displaySummary() {
+    cout << left << setw(20) << "Event"
+        << setw(15) << "Date"
+        << setw(35) << "Venue"
+        << setw(15) << "Total Guests"
+        << setw(20) << "Checked-in Guests" << endl;
+    cout << string(100, '-') << endl;
+
+    for (const auto& s : summaries) {
+        cout << left << setw(20) << s.eventName
+            << setw(15) << s.date
+            << setw(35) << s.venue
+            << setw(15) << s.totalGuests
+            << setw(20) << s.checkedInGuests << endl;
+    }
+}
+
+void Report::displayAttendance() {
+    cout << "\nAttendance Report:\n";
+    cout << left << setw(10) << "GuestID"
+        << setw(20) << "Name"
+        << setw(20) << "Event"
+        << setw(15) << "Checked In"
+        << setw(20) << "Time" << endl;
+    cout << string(85, '-') << endl;
+
+    for (const auto& g : guests) {
+        cout << left << setw(10) << g.guestID
+            << setw(20) << g.name
+            << setw(20) << g.eventName
+            << setw(15) << (g.checkedIn ? "Yes" : "No")
+            << setw(20) << g.checkInTime << endl;
+    }
+}
+
+void Report::displayVenueStats() {
+    cout << "\nVenue Usage Statistics:\n";
+    cout << left << setw(10) << "VenueID"
+        << setw(35) << "Venue Name"
+        << setw(10) << "Capacity"
+        << setw(30) << "Location"
+        << setw(10) << "Booked"
+        << setw(15) << "Usage Count" << endl;
+    cout << string(90, '-') << endl;
+
+    for (const auto& v : venues) {
+        cout << left << setw(10) << v.venueID
+            << setw(35) << v.name
+            << setw(10) << v.capacity
+            << setw(30) << v.location
+            << setw(10) << (v.isBooked ? "Yes" : "No")
+            << setw(15) << v.usageCount << endl;
+    }
+}
 
 void Report::generateReport() {
     ofstream report("report.txt");
@@ -158,7 +193,7 @@ void Report::generateReport() {
         << setw(35) << "Venue"
         << setw(15) << "Total Guests"
         << setw(20) << "Checked-in Guests" << endl;
-    report << string(80, '-') << endl;
+    report << string(90, '-') << endl;
 
     for (const auto& s : summaries) {
         report << left << setw(20) << s.eventName
@@ -173,8 +208,14 @@ void Report::generateReport() {
 }
 
 void Report::displayReportMenu() {
+    loadVenues("venues.txt");
+    loadEvents("events.txt");
+    loadRegistration("registration.txt");
+    loadGuests();
+
     int choice;
     do {
+        clearScreen();
         cout << "\n===== Event Reporting Menu =====\n";
         cout << "1. View Summary of All Events\n";
         cout << "2. View Attendance Report\n";
@@ -187,69 +228,17 @@ void Report::displayReportMenu() {
 
         switch (choice) {
         case 1:
-            loadVenues("venues.txt");       
-            loadEvents("events.txt");       
-            loadRegistration("registration.txt"); 
-            loadGuests("guests.txt");       
-
-
-            cout << left << setw(20) << "Event"
-                << setw(15) << "Date"
-                << setw(35) << "Venue"
-                << setw(15) << "Total Guests"
-                << setw(20) << "Checked-in Guests" << endl;
-            cout << string(100, '-') << endl;
-            for (const auto& s : summaries) {
-                cout << left << setw(20) << s.eventName
-                    << setw(15) << s.date
-                    << setw(35) << s.venue
-                    << setw(15) << s.totalGuests
-                    << setw(20) << s.checkedInGuests << endl;
-            }
+            displaySummary();
             break;
 
         case 2: {
-            // Attendance Report
-            ifstream file("guest.txt");
-            if (!file) {
-                cerr << "Error: Cannot open guest.txt\n";
-                break;
-            }
-
-            cout << "\nAttendance Report (guest.txt):\n";
-            cout << left << setw(10) << "GuestID"
-                << setw(20) << "Name"
-                << setw(20) << "Event"
-                << setw(15) << "Checked In"
-                << setw(20) << "Time" << endl;
-            cout << string(85, '-') << endl;
-
-            string line;
-            while (getline(file, line)) {
-                stringstream ss(line);
-                int id;
-                string name, event, checkedStr, time;
-                ss >> id;
-                ss.ignore();
-                getline(ss, name, ',');
-                getline(ss, event, ',');
-                getline(ss, checkedStr, ',');
-                getline(ss, time, ',');
-
-                string checked = (checkedStr == "1") ? "Yes" : "No";
-
-                cout << left << setw(10) << id
-                    << setw(20) << name
-                    << setw(20) << event
-                    << setw(15) << checked
-                    << setw(20) << time << endl;
-            }
-            file.close();
+			displayAttendance();
             break;
         }
 
         case 3:
-            loadVenues("venues.txt");
+            loadVenuesFromFile();
+            displayVenueStats();
             break;
 
         case 4:
@@ -258,6 +247,9 @@ void Report::displayReportMenu() {
 
         case 5:
             cout << "Returning to main menu...\n";
+            cout << "\nPress Enter to continue...";
+            cin.get();
+            clearScreen();
             break;
 
         default:
