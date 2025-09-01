@@ -1,5 +1,7 @@
 #include "Guest.h"
 #include "Constants.h"
+#include "Registration.h"
+#include "Event.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -98,12 +100,17 @@ void displayRegisteredGuests() {
         << setw(20) << "Check-in Time" << endl;
     cout << string(80, '-') << endl;
 
-    for (const auto& guest : guests) {
-        cout << left << setw(10) << guest.guestID
-            << setw(20) << guest.name
-            << setw(25) << guest.eventName
-            << setw(12) << (guest.checkedIn ? "Checked In" : "Not Checked")
-            << setw(20) << guest.checkInTime << endl;
+    for (const auto& reg : registrations) {
+        Guest* g = findGuestByID(reg.guestID);
+        Event* e = findEventByID(reg.eventID);
+
+        if (g) {
+            cout << left << setw(10) << g->guestID
+                << setw(20) << g->name
+                << setw(25) << (e ? e->eventName : "(Event not found)")
+                << setw(12) << (g->checkedIn ? "Checked In" : "Not Checked")
+                << setw(20) << g->checkInTime << endl;
+        }
     }
     cout << string(80, '=') << endl;
 }
@@ -149,6 +156,7 @@ bool verifyGuest(const string& guestID, const string& name) {
 }
 
 string generateGuestID() {
+    loadGuestsFromFile();
     int nextID = 1;
     if (!guests.empty()) {
         try {
@@ -159,4 +167,13 @@ string generateGuestID() {
         }
     }
     return "G" + to_string(nextID);
+}
+
+Guest* findGuestByID(const string& id) {
+    for (auto& g : guests) {
+        if (g.guestID == id) {
+            return &g;
+        }
+    }
+    return nullptr; // not found
 }
