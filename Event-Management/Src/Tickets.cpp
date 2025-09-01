@@ -17,7 +17,7 @@ using namespace std;
 void tickets() {
     loadEventsFromFile();
     Event* ev = nullptr;
-    string eventName, userName;
+    string eventName, userName, guestID;
 
 	displayEventsForRegistration();
 
@@ -77,6 +77,72 @@ void tickets() {
 
     } while (!validInput);
 
+    // --- Ask if they already have a Guest ID ---
+    string hasGuestID;
+    do {
+        cout << "Do you already have a Guest ID? (Y/N): ";
+        getline(cin, hasGuestID);
+        
+
+        // Convert to uppercase for consistency
+        for (auto& c : hasGuestID) c = toupper(c);
+
+        if (hasGuestID != "Y" && hasGuestID != "N") {
+            cout << "Invalid choice! Please enter Y or N only.\n";
+        }
+    } while (hasGuestID != "Y" && hasGuestID != "N");
+
+    
+
+    if (hasGuestID == "Y") {
+        bool validGuest = false;
+        while (!validGuest) {
+            cout << "Enter your Guest ID: ";
+            getline(cin, guestID);
+
+            loadGuestsFromFile();
+            Guest* existingGuest = findGuestByID(guestID);
+            if (existingGuest) {
+                userName = existingGuest->name;
+                cout << "Welcome back, " << userName << "!\n";
+                cout << "\nPress Enter to continue...";
+                cin.get();
+                clearScreen();
+                validGuest = true; // exit loop
+            }
+            else {
+                cout << "Guest ID not found! Try again (or type 'new' to create a profile): ";
+                string choice;
+                getline(cin, choice);
+                if (choice == "new" || choice == "NEW") {
+                    guestID = generateGuestID();
+                    cout << "Your new Guest ID is: " << guestID << endl;
+                    cout << "\nPress Enter to continue...";
+                    cin.get();
+                    clearScreen();
+
+                    Guest newGuest(guestID, userName, "");
+                    guests.push_back(newGuest);
+                    saveGuestsToFile();
+                    validGuest = true;
+                }
+            }
+        }
+    }
+    else {
+        // New guest directly
+        guestID = generateGuestID();
+        cout << "Your new Guest ID is: " << guestID << endl;
+        cout << "\nPress Enter to continue...";
+        cin.get();
+        clearScreen();
+
+        Guest newGuest(guestID, userName, "");
+        guests.push_back(newGuest);
+        saveGuestsToFile();
+    }
+
+
 
     // Deduct tickets
     ev->ticketAmount -= ticketsRequested;
@@ -87,27 +153,26 @@ void tickets() {
     // Generate Registration ID
     string newRegID = generateRegistrationID(); // "R#" auto-generated
 
+    
+
+
     // Create and save Registration
     double totalCost = ev->ticketPrice * ticketsRequested; // total cost
+
     Registration newReg(
         newRegID,       // registrationID (string "R#")
         ev->eventID,    // eventID ("E#")
         ev->eventName,  // eventName
         ev->eventDate,  // eventDate
+		guestID,    // guestID
         userName,       // userName
         ticketsRequested,
         totalCost
     );
 
-    clearScreen();
     // Process payment immediately
+    clearScreen();
     processPayment(newReg, ev);
-
-
-    string newGuestID = generateGuestID();
-    Guest newGuest(newGuestID, userName, ev->eventName);
-    guests.push_back(newGuest);
-    saveGuestsToFile();  // Save to guests.txt
 
     // Save to file
     registrations.push_back(newReg);
@@ -119,6 +184,7 @@ void tickets() {
     cout << "         REGISTRATION CONFIRMATION\n";
     cout << string(60, '=') << "\n";
     cout << "Registration ID: " << newReg.registrationID << "\n";
+    cout << "Guest ID:        " << newReg.guestID << "\n";  
     cout << "Event:           " << newReg.eventName << " (" << newReg.eventID << ")\n";
 	cout << "Date:            " << newReg.eventDate << "\n";
     cout << "Name:            " << newReg.userName << "\n";
