@@ -6,10 +6,11 @@
 #include <vector>
 #include "Product.h"
 #include "Registration.h"
+#include "Event.h"
 using namespace std;
 
 // Payment functions
-void processPayment(Registration& reg);
+void processPayment(Registration& reg, Event* ev);
 void viewReceipts();
 
 #endif
