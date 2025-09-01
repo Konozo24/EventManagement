@@ -2,7 +2,8 @@
 #include "Constants.h"
 #include "Registration.h"
 #include "Utils.h"
-
+#include "Marketing.h"
+#include "Product.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -25,7 +26,7 @@ int getNextReceiptNumber() {
 }
 
 // ===== Helper: Save receipt to file =====
-void saveReceipt(const Registration& reg, const vector<Product>& selectedProducts, const string& method) {
+void saveReceipt(const Registration& reg, const vector<MarketingItem>& selectedProducts, const string& method) {
 
     double productTotal = 0.0;
 
@@ -45,13 +46,24 @@ void saveReceipt(const Registration& reg, const vector<Product>& selectedProduct
         out << "Product         : None\n";  
     }
     else {
+        const int labelWidth = 16; // width of "Product         : "
+        bool first = true;
         for (const auto& p : selectedProducts) {
             if (p.quantity > 0) {
                 double subtotal = p.price * p.quantity;
-                out << "Product         : "
-                    << setw(12) << left << p.name
+
+                if (first) {
+                    out << "Product         : ";
+                    first = false;
+                }
+                else {
+                    out << string(labelWidth, ' '); // indent to align with first line
+                }
+
+                out << setw(20) << left << p.name  // name column width
                     << " x " << p.quantity
                     << " = RM" << fixed << setprecision(2) << subtotal << "\n";
+
                 productTotal += subtotal;
             }
         }
@@ -73,20 +85,14 @@ void saveReceipt(const Registration& reg, const vector<Product>& selectedProduct
 
 
 // ===== Main: Checkout process =====
-void processPayment(Registration& reg) {
-    // TODO: Replace with real lookup from registration.txt later
-    string name = "TEMP_NAME";
-    string eventName = "TEMP_EVENT";
-    int ticketAmount = 1;
-    double ticketPrice = 30.0;
-
+void processPayment(Registration& reg, Event* ev) {
+    
     // Load registrations from file
     loadRegistrationFromFile();
+    loadProductsFromFile();
 
-    // Dummy selected products (later link with Registration module)
-    vector<Product> selectedProducts = { {"SmartWatch Pro", 299.0, 1} };
-
-    double productTotal = 0.0;
+    vector<MarketingItem> selectedProducts;
+    
 
     cout << "\n--- Payment Summary ---\n";
     cout << "Registration ID : " << reg.registrationID << endl;
@@ -97,21 +103,132 @@ void processPayment(Registration& reg) {
         << reg.registrationCost / reg.ticketsBought << endl;
     cout << "Ticket Total: RM" << fixed << setprecision(2) << reg.registrationCost << endl;
 
-    if (selectedProducts.empty()) {
-        cout << "Product         : None\n";
+    // --- Dynamic 2D Array for product payment details ---
+    int maxProducts = products.size();
+    double** paymentData = new double* [maxProducts];
+    for (int i = 0; i < maxProducts; i++) {
+        paymentData[i] = new double[3]; // [price, qty, subtotal]
+        paymentData[i][0] = 0;
+        paymentData[i][1] = 0;
+        paymentData[i][2] = 0;
     }
-    else {
-        for (const auto& p : selectedProducts) {
-            if (p.quantity > 0) {
-                double subtotal = p.price * p.quantity;
-                cout << "Product         : "
-                    << setw(12) << left << p.name
-                    << " x " << p.quantity
-                    << " = RM" << fixed << setprecision(2) << subtotal << "\n";
-                productTotal += subtotal;
+
+    // === Let user select products ===
+    if (!products.empty()) {
+        vector<int> availableIndices; // maps displayed number to actual product index
+        int displayIndex = 1;
+
+        cout << "\nAvailable Products:\n";
+       
+        for (size_t i = 0; i < products.size(); ++i) {
+            if (products[i].quantity > 0) {
+                cout << displayIndex << ". " << products[i].name
+                    << " (RM" << fixed << setprecision(2) << products[i].price
+                    << ") | Stock: " << products[i].quantity << "\n";
+                availableIndices.push_back(i);
+                displayIndex++;
             }
         }
+
+        if (availableIndices.empty()) {
+            cout << "All products are out of stock.\n";
+        }
+        else {
+            int choice = -1;
+            string input;
+            while (choice != 0) {
+                cout << "\nEnter product number to add (0 to finish): ";
+                getline(cin, input);
+
+                // Validate numeric input
+                bool validChoice = !input.empty();
+                for (char c : input) if (!isdigit(c)) validChoice = false;
+
+                if (!validChoice) {
+                    cout << "Invalid input! Enter a number.\n";
+                    continue;
+                }
+
+                choice = stoi(input);
+                if (choice == 0) break;
+
+                if (choice < 1 || choice >(int)availableIndices.size()) {
+                    cout << "Invalid choice!\n";
+                    continue;
+                }
+
+                MarketingItem& item = products[availableIndices[choice - 1]];
+
+                // Quantity input
+                int qty = 0;
+                bool validQty = false;
+                do {
+                    cout << "Enter quantity: ";
+                    getline(cin, input);
+
+                    validQty = !input.empty();
+                    for (char c : input) if (!isdigit(c)) validQty = false;
+
+                    if (!validQty) {
+                        cout << "Invalid input! Enter a number.\n";
+                        continue;
+                    }
+
+                    qty = stoi(input);
+                    if (qty <= 0 || qty > item.quantity) {
+                        cout << "Quantity must be >0 and ≤ stock (" << item.quantity << ").\n";
+                        validQty = false;
+                    }
+
+                } while (!validQty);
+
+                // === Update 2D array ===
+                int idx = availableIndices[choice - 1];
+                paymentData[idx][0] = item.price;            // price
+                paymentData[idx][1] += qty;                  // add qty
+                paymentData[idx][2] = paymentData[idx][0] * paymentData[idx][1]; // subtotal
+
+                // Add to selected products
+                bool found = false;
+                for (auto& sel : selectedProducts) {
+                    if (sel.name == item.name && sel.eventID == item.eventID) {
+                        sel.quantity += qty;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    MarketingItem selected = item;
+                    selected.quantity = qty;
+                    selectedProducts.push_back(selected);
+                }
+
+                // Reduce stock
+                item.quantity -= qty;
+                if (item.quantity == 0) {
+                    cout << "Note: " << item.name << " is now out of stock.\n";
+                    // Rebuild availableIndices for next display
+                    availableIndices.clear();
+                    displayIndex = 1;
+                    for (size_t i = 0; i < products.size(); ++i) {
+                        if (products[i].quantity > 0) {
+                            availableIndices.push_back(i);
+                            displayIndex++;
+                        }
+                    }
+                }
+            }
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
     }
+
+    // === Calculate totals ===
+    double productTotal = 0.0;
+    for (int i = 0; i < products.size(); i++) {
+        productTotal += paymentData[i][2];
+    }
+
 
     double grandTotal = reg.registrationCost + productTotal;
 
@@ -120,28 +237,38 @@ void processPayment(Registration& reg) {
     cout << "Product Total   : RM" << fixed << setprecision(2) << productTotal << "\n";
     cout << "Total           : RM" << fixed << setprecision(2) << grandTotal << "\n";
 
-    string method;
-    bool valid = false;
 
-    while (!valid) {
+	// === Choose payment method =====
+    string method;
+    bool validMethod = false;
+
+    do {
         cout << "\nChoose payment method (Cash / Credit / E-Wallet): ";
         getline(cin, method);
 
-        if (method == "Cash" || method == "Credit" || method == "E-Wallet") {
-            valid = true;
-        }
-        else {
+        if (method == "Cash" || method == "Credit" || method == "E-Wallet")
+            validMethod = true;
+        else
             cout << "Invalid payment method! Try again.\n";
-        }
-    }
+    } while (!validMethod);
+
+    // Save updated product stock
+    saveProductsToFile();
 
     // Save receipt
     saveReceipt(reg, selectedProducts, method);
 
-    cout << "\nPress Enter to return to menu...";
+    cout << "\nPayment successful! Press Enter to return to menu...";
     cin.get();
     clearScreen();
+
+    // Free 2D array
+    for (int i = 0; i < maxProducts; ++i)
+        delete[] paymentData[i];
+
+    delete[] paymentData;
 }
+
 
 // ===== Main: View receipts =====
 void viewReceipts() {
