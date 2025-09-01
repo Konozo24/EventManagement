@@ -12,14 +12,7 @@
 #include <cctype>
 using namespace std;
 
-struct MarketingItem {
-    string eventID;
-    string name;
-    double price;
-    int quantity;
-};
-
-static vector<MarketingItem> products;
+vector<MarketingItem> products;
 
 // ---------------- Helpers ----------------
 static bool isAllDigits(const string& s) {
@@ -100,7 +93,7 @@ static string findEventNameByID(const string& evID) {
 }
 
 // ---------------- File I/O ----------------
-static void loadProductsFromFile() {
+void loadProductsFromFile() {
     products.clear();
     ifstream file(PRODUCTS_FILE);
     if (!file.is_open()) return;
@@ -126,13 +119,13 @@ static void loadProductsFromFile() {
             products.push_back(mi);
         }
         catch (...) {
-           
+
         }
     }
     file.close();
 }
 
-static void saveProductsToFile() {
+void saveProductsToFile() {
     ofstream file(PRODUCTS_FILE);
     for (const auto& p : products) {
         int q = p.quantity < 0 ? 0 : p.quantity;
@@ -152,7 +145,7 @@ void marketingAdmin() {
         cout << "1. Add Product" << endl;
         cout << "2. Edit Product" << endl;
         cout << "3. View All Products" << endl;
-        cout << "cancel. Return to Main Menu" << endl;
+        cout << "Type 'cancel' to return to the Main Menu" << endl;
         cout << string(60, '-') << endl;
         cout << "Enter choice: ";
 
@@ -167,9 +160,7 @@ void marketingAdmin() {
         if (choice == 1) {
             // Add product
             clearScreen();
-            cout << "\n" << string(80, '=') << endl;
-            cout << "                AVAILABLE EVENTS" << endl;
-            cout << string(80, '=') << endl;
+            
             displayEventsForRegistration();
 
             cout << "\nEnter Event Name to link product (or 'cancel'): ";
@@ -192,7 +183,6 @@ void marketingAdmin() {
             products.push_back({ ev->eventID, pname, price, qty });
             saveProductsToFile();
 
-            clearScreen();
             cout << "Product added successfully!\nPress Enter...";
             cin.get();
             clearScreen();
@@ -290,9 +280,6 @@ void marketingUser() {
         clearScreen();
         loadEventsFromFile();
 
-        cout << "\n" << string(80, '=') << endl;
-        cout << "                      AVAILABLE EVENTS" << endl;
-        cout << string(80, '=') << endl;
         displayEventsForRegistration();
 
         cout << "\nEnter Event Name to view products (or 'cancel'): ";
@@ -370,4 +357,74 @@ void marketingUser() {
         cin.get();
         clearScreen();
     }
+}
+
+vector<MarketingItem> selectProductsForEvent(const Event& ev) {
+    vector<MarketingItem> selectedProducts;
+
+    loadProductsFromFile();
+
+    // Filter products for this event
+    vector<MarketingItem> eventProducts;
+    for (const auto& item : products) {
+        if (item.eventID == ev.eventID) {
+            eventProducts.push_back(item);
+        }
+    }
+
+    if (eventProducts.empty()) {
+        cout << "\nNo products available for this event.\n";
+        return selectedProducts;
+    }
+
+    cout << "\nAvailable products for event: " << ev.eventName << "\n";
+    for (size_t i = 0; i < eventProducts.size(); i++) {
+        cout << (i + 1) << ". " << eventProducts[i].name
+            << " - RM" << eventProducts[i].price
+            << " (Stock: " << eventProducts[i].quantity << ")\n";
+    }
+
+    int productChoice = -1;
+    while (productChoice != 0) {
+        cout << "\nEnter product number to buy (0 to stop): ";
+        cin >> productChoice;
+
+        if (productChoice == 0) break;
+
+        if (productChoice < 1 || productChoice >(int)eventProducts.size()) {
+            cout << "Invalid choice.\n";
+            continue;
+        }
+
+        int quantity;
+        MarketingItem& item = eventProducts[productChoice - 1];
+
+        cout << "Enter quantity for " << item.name << ": ";
+        cin >> quantity;
+
+        if (quantity > item.quantity || quantity <= 0) {
+            cout << "Invalid quantity. Only " << item.quantity << " available.\n";
+            continue;
+        }
+
+        // Deduct stock in main product list
+        for (auto& p : products) {
+            if (p.eventID == item.eventID && p.name == item.name) {
+                p.quantity -= quantity;
+                break;
+            }
+        }
+
+        // Add to selectedProducts
+        MarketingItem bought = item;
+        bought.quantity = quantity;
+        selectedProducts.push_back(bought);
+
+        cout << "Added " << quantity << " x " << item.name << " to cart.\n";
+    }
+
+    // Save updated stock back to file
+    saveProductsToFile();
+
+    return selectedProducts;
 }
