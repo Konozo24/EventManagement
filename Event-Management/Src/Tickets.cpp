@@ -170,6 +170,7 @@ void tickets() {
         totalCost
     );
 
+
     // Process payment immediately
     clearScreen();
     processPayment(newReg, ev);
