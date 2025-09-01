@@ -77,6 +77,7 @@ void tickets() {
 
     } while (!validInput);
 
+
     // Deduct tickets
     ev->ticketAmount -= ticketsRequested;
     saveEventsToFile();   // update event list with reduced tickets
@@ -98,8 +99,9 @@ void tickets() {
         totalCost
     );
 
+    clearScreen();
     // Process payment immediately
-    processPayment(newReg);
+    processPayment(newReg, ev);
 
 
     string newGuestID = generateGuestID();
