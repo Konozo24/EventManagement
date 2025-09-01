@@ -3,6 +3,7 @@
 #include "Event.h"
 #include "Venue.h"
 #include "Utils.h"
+#include "Registration.h"
 #include "Constants.h"
 #include <vector>
 #include <string>
@@ -91,8 +92,9 @@ void monitorEvent() {
     do {
         clearScreen();
 
-        // Load latest guest data
         loadGuestsFromFile();
+        loadEventsFromFile();
+        loadRegistrationFromFile();
 
         // Display current guest status
         displayRegisteredGuests();
@@ -119,35 +121,49 @@ void monitorEvent() {
 
         switch (choice) {
         case 1: {
-            string guestID = validateGuestIDInput();
-            if (guestID == "0") break;  // user cancelled
+            string regID = validateRegistrationIDInput();
+            if (regID == "0") break;  // user cancelled
 
             bool found = false;
-            for (auto& guest : guests) {
-                if (guest.guestID == guestID) {
+            for (auto& reg : registrations) {
+                if (reg.registrationID == regID) {
                     found = true;
-                    if (guest.checkedIn) {
-                        cout << "\nGuest " << guest.name << " (ID: " << guestID
-                            << ") is already checked in at " << guest.checkInTime << endl;
+
+                    Guest* g = findGuestByID(reg.guestID);
+                    Event* e = findEventByID(reg.eventID);
+
+                    if (g) {
+                        if (g->checkedIn) {
+                            cout << "\nGuest " << g->name << " (ID: " << g->guestID
+                                << ") is already checked in at " << g->checkInTime << endl;
+                        }
+                        else {
+                            g->checkIn();
+                            saveGuestsToFile(); // save changes immediately
+
+                            cout << "\n" << string(50, '*') << endl;
+                            cout << "CHECK-IN SUCCESSFUL!" << endl;
+                            cout << "Guest: " << g->name << endl;
+                            cout << "Guest ID: " << g->guestID << endl;
+                            if (e) cout << "Event: " << e->eventName << endl;
+                            cout << "Time: " << g->checkInTime << endl;
+                            cout << string(50, '*') << endl;
+                        }
                     }
                     else {
-                        guest.checkIn();
-                        saveGuestsToFile(); // save changes immediately
-
-                        cout << "\n" << string(50, '*') << endl;
-                        cout << "CHECK-IN SUCCESSFUL!" << endl;
-                        cout << "Guest: " << guest.name << endl;
-                        cout << "ID: " << guest.guestID << endl;
-                        cout << "Event: " << guest.eventName << endl;
-                        cout << "Time: " << guest.checkInTime << endl;
-                        cout << string(50, '*') << endl;
+                        cout << "\nGuest not found for Registration ID " << reg.registrationID << endl;
                     }
+                    
                     break;
+
+
                 }
+
+
             }
 
             if (!found) {
-                cout << "\nGuest ID " << guestID << " not found!" << endl;
+                cout << "\nRegistration ID " << regID << " not found!" << endl;
             }
 
             cout << "\nPress Enter to continue...";
