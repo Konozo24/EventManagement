@@ -16,7 +16,7 @@ using namespace std;
 
 
 int main() {
-    initializeDefaultVenues();
+    loadVenuesFromFile();
 
     cout << "=" << string(60, '=') << endl;
     cout << "EVENT MANAGEMENT MODULES" << endl;
