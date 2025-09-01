@@ -83,6 +83,11 @@ void loadVenuesFromFile() {
         }
     }
     file.close();
+    
+	// Reinitialize defaults venues if file is empty
+    if (venues.empty()) {
+        initializeDefaultVenues();
+    }
 }
 
 void saveVenuesToFile() {
@@ -246,7 +251,6 @@ string validateBookedVenueSelection() {
         getline(cin, input);
 
         if (input == "0") {
-            clearScreen();
             return "0";
         }
 
