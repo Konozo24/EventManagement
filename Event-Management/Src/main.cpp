@@ -19,7 +19,7 @@ int main() {
     loadVenuesFromFile();
 
     cout << "=" << string(60, '=') << endl;
-    cout << "EVENT MANAGEMENT MODULES" << endl;
+    cout << "       EVENT MANAGEMENT MODULES" << endl;
     cout << "=" << string(60, '=') << endl;
 
 
@@ -39,6 +39,7 @@ int main() {
         cout << "9. Event Reporting (Admin)" << endl;
         cout << "10. Marketing (User)" << endl;
         cout << "11. Marketing (Admin)" << endl;
+        cout << "12. View My Event History" << endl;
         cout << "0. Exit" << endl;
         cout << string(50, '-') << endl;
         cout << "Enter your choice: ";
@@ -95,6 +96,13 @@ int main() {
         case 11:
             marketingAdmin();
             break;
+        case 12: {
+            string guestID;
+            cout << "Enter your guestID: ";
+            getline(cin, guestID);
+            viewUserHistory(guestID);
+            break;
+        }
         case 0:
             cout << "\nThank you for using the system!" << endl;
             break;
