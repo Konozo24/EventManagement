@@ -124,3 +124,12 @@ Event* findEventByName(const string& name) {
     }
     return nullptr; // Not found
 }
+
+Event* findEventByID(const string& eventID) {
+    for (auto& e : events) {
+        if (e.eventID == eventID) {
+            return &e;  
+        }
+    }
+    return nullptr;  
+}
