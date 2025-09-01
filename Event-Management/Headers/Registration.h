@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "Marketing.h"
 using namespace std;
 
 struct Registration {
