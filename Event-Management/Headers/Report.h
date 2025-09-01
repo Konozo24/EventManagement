@@ -20,7 +20,7 @@ private:
     vector<BookingSummary> summaries;
 
     void loadRegistration(const string& filename);
-    void loadGuests(const string& filename);
+    void loadGuests();
     void loadVenues(const string& filename);
     void loadEvents(const string& filename);
 
@@ -30,6 +30,9 @@ private:
 public:
     void generateReport();
     void displayReportMenu();
+    void displaySummary();
+    void displayAttendance();
+    void displayVenueStats();
 };
 
 #endif
