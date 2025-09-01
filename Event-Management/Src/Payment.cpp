@@ -121,7 +121,7 @@ void processPayment(Registration& reg, Event* ev) {
         cout << "\nAvailable Products:\n";
        
         for (size_t i = 0; i < products.size(); ++i) {
-            if (products[i].quantity > 0) {
+            if (products[i].eventID == reg.eventID && products[i].quantity > 0) {
                 cout << displayIndex << ". " << products[i].name
                     << " (RM" << fixed << setprecision(2) << products[i].price
                     << ") | Stock: " << products[i].quantity << "\n";
@@ -212,7 +212,7 @@ void processPayment(Registration& reg, Event* ev) {
                     availableIndices.clear();
                     displayIndex = 1;
                     for (size_t i = 0; i < products.size(); ++i) {
-                        if (products[i].quantity > 0) {
+                        if (products[i].eventID == reg.eventID && products[i].quantity > 0) {
                             availableIndices.push_back(i);
                             displayIndex++;
                         }
