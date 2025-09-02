@@ -1,6 +1,6 @@
 #include "Report.h"
 #include "Guest.h"
-
+#include "Registration.h"
 #include "Venue.h"
 #include "Utils.h"
 #include <fstream>
@@ -50,50 +50,24 @@ void Report::loadEvents(const string& filename) {
 }
 
 void Report::loadRegistration(const string& filename) {
-    ifstream file(filename);
-    if (!file) {
-        cerr << "Error: Cannot open " << filename << endl;
-        return;
-    }
+    loadRegistrationFromFile();
+    summaries.clear();
 
-    string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
-        string regId, eventId, eventName, date, username, tickets, cost;
+    for (const auto& reg : registrations) {
+        string fullEventName = reg.eventName + " (" + reg.eventID + ")";
 
-        getline(ss, regId, '|');
-        getline(ss, eventId, '|');
-        getline(ss, eventName, '|');
-        getline(ss, date, '|');
-        getline(ss, username, '|');
-        getline(ss, tickets, '|');
-        getline(ss, cost, '|');
+        // Check if this event is already in summaries
+        auto it = find_if(summaries.begin(), summaries.end(),
+            [&](const BookingSummary& s) { return s.eventName == fullEventName; });
 
-        // Format as "EventName (EventID)"
-        string fullEventName = eventName + " (" + eventId + ")";
-
-        // Find if this event already exists in summaries
-        bool found = false;
-        for (auto& s : summaries) {
-            if (s.eventName == fullEventName) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
+        if (it == summaries.end()) {
             BookingSummary summary;
             summary.eventName = fullEventName;
-            summary.date = date;
+            summary.date = reg.eventDate;
 
-            // Resolve venue
-            string venueID = eventVenueMap[eventId];
-            if (!venueID.empty() && venueMap.find(venueID) != venueMap.end()) {
-                summary.venue = venueMap[venueID];
-            }
-            else {
-                summary.venue = "N/A";
-            }
+            string venueID = eventVenueMap[reg.eventID];
+            summary.venue = (venueID.empty() || venueMap.find(venueID) == venueMap.end())
+                ? "N/A" : venueMap[venueID];
 
             summary.totalGuests = 0;
             summary.checkedInGuests = 0;
@@ -101,7 +75,6 @@ void Report::loadRegistration(const string& filename) {
             summaries.push_back(summary);
         }
     }
-    file.close();
 }
 
 void Report::loadGuests() {
@@ -115,12 +88,13 @@ void Report::loadGuests() {
     }
 
     // Count based on loaded guests
-    for (const auto& g : guests) {
+    for (const auto& reg : registrations) {
+        string fullEventName = reg.eventName + " (" + reg.eventID + ")";
         for (auto& s : summaries) {
-            string summaryNameOnly = s.eventName.substr(0, s.eventName.find(" ("));
-            if (summaryNameOnly == g.eventName) {
+            if (s.eventName == fullEventName) {
                 s.totalGuests++;
-                if (g.checkedIn) s.checkedInGuests++;
+                if (reg.checkedIn) s.checkedInGuests++;
+                break;
             }
         }
     }
@@ -135,33 +109,49 @@ void Report::displaySummary() {
     cout << string(100, '-') << endl;
 
     for (const auto& s : summaries) {
+        string venueDisplay = s.venue;
+        if (venueDisplay == "N/A" || venueDisplay.empty()) {
+            venueDisplay = "CANCELLED (Venue Released)";
+        }
+
+
         cout << left << setw(20) << s.eventName
             << setw(15) << s.date
-            << setw(35) << s.venue
+            << setw(35) << venueDisplay
             << setw(15) << s.totalGuests
             << setw(20) << s.checkedInGuests << endl;
     }
 }
 
 void Report::displayAttendance() {
-    cout << "\nAttendance Report:\n";
-    cout << left << setw(10) << "GuestID"
-        << setw(20) << "Name"
-        << setw(20) << "Event"
-        << setw(15) << "Checked In"
-        << setw(20) << "Time" << endl;
-    cout << string(85, '-') << endl;
+    loadRegistrationFromFile();
+    loadGuestsFromFile();
 
-    for (const auto& g : guests) {
-        cout << left << setw(10) << g.guestID
-            << setw(20) << g.name
-            << setw(20) << g.eventName
-            << setw(15) << (g.checkedIn ? "Yes" : "No")
-            << setw(20) << g.checkInTime << endl;
+    cout << "\nAttendance Report:\n";
+    cout << left << setw(10) << "RegID"
+        << setw(10) << "GuestID"
+        << setw(20) << "Name"
+        << setw(25) << "Event"
+        << setw(12) << "Tickets"
+        << setw(15) << "Checked In"
+        << setw(25) << "Time" << endl;
+    cout << string(115, '-') << endl;
+
+    for (const auto& reg : registrations) {
+        Guest* g = findGuestByID(reg.guestID);
+        cout << left << setw(10) << reg.registrationID
+            << setw(10) << reg.guestID
+            << setw(20) << (g ? g->name : "(Unknown)")
+            << setw(25) << reg.eventName
+            << setw(12) << reg.ticketsBought
+            << setw(15) << (reg.checkedIn ? "Yes" : "No")
+            << setw(25) << (reg.checkedIn ? reg.checkInTime : "-")
+            << endl;
     }
 }
 
 void Report::displayVenueStats() {
+    loadVenuesFromFile();
     cout << "\nVenue Usage Statistics:\n";
     cout << left << setw(10) << "VenueID"
         << setw(35) << "Venue Name"
@@ -196,9 +186,14 @@ void Report::generateReport() {
     report << string(90, '-') << endl;
 
     for (const auto& s : summaries) {
+        string venueDisplay = s.venue;
+        if (venueDisplay == "N/A" || venueDisplay.empty()) {
+            venueDisplay = "CANCELLED (Venue Released)";
+        }
+
         report << left << setw(20) << s.eventName
             << setw(15) << s.date
-            << setw(35) << s.venue
+            << setw(35) << venueDisplay
             << setw(15) << s.totalGuests
             << setw(20) << s.checkedInGuests << endl;
     }
@@ -237,7 +232,6 @@ void Report::displayReportMenu() {
         }
 
         case 3:
-            loadVenuesFromFile();
             displayVenueStats();
             break;
 
