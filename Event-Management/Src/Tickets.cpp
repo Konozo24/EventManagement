@@ -72,7 +72,7 @@ void tickets() {
         }
         else if (ticketsRequested > ev->ticketAmount) {
             cout << "Not enough tickets! Only " << ev->ticketAmount << " left.\n";
-            validInput = false;
+            validInput = false; 
         }
 
     } while (!validInput);
@@ -103,12 +103,31 @@ void tickets() {
             loadGuestsFromFile();
             Guest* existingGuest = findGuestByID(guestID);
             if (existingGuest) {
-                userName = existingGuest->name;
-                cout << "Welcome back, " << userName << "!\n";
-                cout << "\nPress Enter to continue...";
-                cin.get();
-                clearScreen();
-                validGuest = true; // exit loop
+                // Check if entered name matches the Guest ID
+                if (existingGuest->name != userName) {
+                    cout << "Error: Guest ID does not match the entered name!\n";
+                    cout << "Please enter the correct Guest ID or type 'new' to create a new profile.\n";
+
+                    string choice;
+                    getline(cin, choice);
+                    if (choice == "new" || choice == "NEW") {
+                        guestID = generateGuestID();
+                        cout << "Your new Guest ID is: " << guestID << endl;
+                        cout << "\nPress Enter to continue...";
+                        cin.get();
+                        clearScreen();
+
+                        Guest newGuest(guestID, userName, ev->eventName);
+                        guests.push_back(newGuest);
+                        saveGuestsToFile();
+                        validGuest = true;
+                    }
+                }
+                else {
+                    cout << "Welcome back, " << existingGuest->name << "!\n";
+                    userName = existingGuest->name;
+                    validGuest = true;
+                }
             }
             else {
                 cout << "Guest ID not found! Try again (or type 'new' to create a profile): ";
@@ -142,7 +161,25 @@ void tickets() {
         saveGuestsToFile();
     }
 
+    // --- Check if this guest already registered for the event ---
+    loadRegistrationFromFile();
+    bool alreadyRegistered = false;
 
+    for (const auto& r : registrations) {
+        if (r.guestID == guestID && r.eventID == ev->eventID) {
+            alreadyRegistered = true;
+            break;
+        }
+    }
+
+    if (alreadyRegistered) {
+        cout << "\nError: You (" << userName << ") are already registered for this event!\n";
+        cout << "Duplicate registrations are not allowed.\n";
+        cout << "\nPress Enter to continue...";
+        cin.get();
+        clearScreen();
+        return; // exit before ticket asking
+    }
 
     // Deduct tickets
     ev->ticketAmount -= ticketsRequested;
