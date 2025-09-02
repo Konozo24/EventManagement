@@ -16,12 +16,13 @@ struct Registration {
     int ticketsBought;       // number of tickets bought
 	double registrationCost; // total cost
     
-
+    bool checkedIn;
+    string checkInTime;
 
     Registration();
     Registration(const string& regId, const string& eventId, const string& eventName,
         const string& eventDate, const string& guestID, const string& userName,
-        int tickets, double cost);
+        int tickets, double cost, bool checkedIn = false, const string& checkInTime = "");
 };
 
 extern vector<Registration> registrations;
