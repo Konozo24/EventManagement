@@ -14,16 +14,17 @@ vector<Registration> registrations;
 static int nextRegistrationID = 1; // auto increment counter
 
 // Constructors
-Registration::Registration() : registrationID(""), eventID(""), eventName(""), eventDate(""),
-guestID(""), userName(""), ticketsBought(0), registrationCost(0.0) {
+Registration::Registration()
+    : registrationID(""), eventID(""), eventName(""), eventDate(""),
+    guestID(""), userName(""), ticketsBought(0), registrationCost(0.0),
+    checkedIn(false), checkInTime("") {
 }
-
 Registration::Registration(const string& regId, const string& evId, const string& evName,
     const string& evDate, const string& gID, const string& uName,
-    int tickets, double cost)
-    : registrationID(regId), eventID(evId), eventName(evName),
-    eventDate(evDate), guestID(gID), userName(uName),
-    ticketsBought(tickets), registrationCost(cost) {
+    int tickets, double cost, bool checkin, const string& timestamp)
+    : registrationID(regId), eventID(evId), eventName(evName), eventDate(evDate),
+    guestID(gID), userName(uName), ticketsBought(tickets), registrationCost(cost),
+    checkedIn(checkin), checkInTime(timestamp) {
 }
 
 
@@ -44,7 +45,7 @@ void loadRegistrationFromFile() {
         if (line.empty()) continue;
 
         stringstream ss(line);
-        string regId, evId, evName, evDate, gID, userName, tickets, cost;
+        string regId, evId, evName, evDate, gID, userName, tickets, cost, checkinFlag, checkinTime;
 
         getline(ss, regId, '|');
         getline(ss, evId, '|');
@@ -54,8 +55,11 @@ void loadRegistrationFromFile() {
         getline(ss, userName, '|');
         getline(ss, tickets, '|');
         getline(ss, cost, '|');
+        getline(ss, checkinFlag, '|');
+        getline(ss, checkinTime, '|');
 
-        Registration reg(regId, evId, evName, evDate, gID, userName, stoi(tickets), stod(cost));
+        bool checked = (checkinFlag == "1");
+        Registration reg(regId, evId, evName, evDate, gID, userName, stoi(tickets), stod(cost), checked, checkinTime);
         registrations.push_back(reg);
 
         // keep track of largest numeric part of regId
@@ -81,7 +85,9 @@ void saveRegistrationToFile() {
             << reg.guestID << "|"
             << reg.userName << "|"
             << reg.ticketsBought << "|"
-            << fixed << setprecision(2) << reg.registrationCost
+            << fixed << setprecision(2) << reg.registrationCost << "|"
+            << (reg.checkedIn ? "1" : "0") << "|"
+            << reg.checkInTime
             << endl;
     }
     file.close();
@@ -98,8 +104,10 @@ void displayRegistration() {
         << setw(10) << "GuestID"
         << setw(12) << "Guest"
         << setw(8) << "Tickets"
-        << setw(10) << "Cost(RM)" << endl;
-    cout << string(90, '-') << endl;
+        << setw(10) << "Cost(RM)"
+        << setw(8) << "Checked In"
+        << setw(20) << "Check-in Time" << endl;
+    cout << string(100, '-') << endl;
 
     for (const auto& reg : registrations) {
         cout << left << setw(8) << reg.registrationID
@@ -110,9 +118,12 @@ void displayRegistration() {
             << setw(12) << reg.userName
             << setw(8) << reg.ticketsBought
             << setw(10) << fixed << setprecision(2) << reg.registrationCost
+            << setw(10) << (reg.checkedIn ? "Yes" : "No")
+            << setw(20) << (reg.checkedIn ? reg.checkInTime : "-")
             << endl;
+       
     }
-    cout << string(90, '=') << endl;
+    cout << string(100, '=') << endl;
 }
 
 string generateRegistrationID() {
@@ -126,7 +137,7 @@ void viewUserHistory(const string& guestID) {
 
     cout << "\n" << string(50, '=') << endl;
     cout << "        EVENT HISTORY FOR GUEST: " << guestID << endl;
-    cout << string(50, '=') << endl;
+    cout << string(50, '=') << endl << endl;
 
     // ===== Step 1: Read receipt.txt once into a map =====
     ifstream file("receipt.txt");
@@ -195,33 +206,55 @@ void viewUserHistory(const string& guestID) {
 
 
     bool found = false;
+    bool headerPrinted = false;
+
+
     for (const auto& reg : registrations) {
         if (reg.guestID == guestID) {
-            cout << "Registration ID : " << reg.registrationID << endl;
-            cout << "Event ID        : " << reg.eventID << endl;
-            cout << "Event Name      : " << reg.eventName << endl;
-            cout << "Event Date      : " << reg.eventDate << endl;
-            cout << "Tickets Bought  : " << reg.ticketsBought << endl;
-            cout << "Total Cost      : RM" << fixed << setprecision(2) << reg.registrationCost << endl;
+            if (!headerPrinted) {
+                cout << left << setw(8) << "RegID"
+                    << setw(6) << "EvID"
+                    << setw(20) << "Event Name"
+                    << setw(12) << "Date"
+                    << setw(8) << "Tickets"
+                    << setw(12) << "Cost(RM)"
+                    << setw(10) << "Checked"
+                    << setw(20) << "Check-in Time" << endl;
+                cout << string(100, '-') << endl;
+                headerPrinted = true;
+            }
+
+            cout << left << setw(8) << reg.registrationID
+                << setw(6) << reg.eventID
+                << setw(20) << reg.eventName
+                << setw(12) << reg.eventDate
+                << setw(8) << reg.ticketsBought
+                << setw(12) << fixed << setprecision(2) << reg.registrationCost
+                << setw(10) << (reg.checkedIn ? "Yes" : "No")
+                << setw(20) << (reg.checkedIn ? reg.checkInTime : "-")
+                << endl;
           
             // Show purchases
-            cout << "Purchased Items:\n";
-            if (purchases.count(reg.registrationID)) {
-                for (const auto& item : purchases[reg.registrationID]) {
-                    cout << "   " << item << "\n";
+            cout << setw(15) << "\n" << "Purchased Items: ";
+            if (purchases.count(reg.registrationID) && !purchases[reg.registrationID].empty()) {
+                for (size_t i = 0; i < purchases[reg.registrationID].size(); ++i) {
+                    if (i > 0) cout << setw(15) << ""; // indent for subsequent items
+                    cout << purchases[reg.registrationID][i] << endl;
                 }
             }
             else {
-                cout << "   None\n";
+                cout << "None\n";
             }
-
             // Show payment method
+            cout << setw(15) << "" << "Payment Method: ";
             if (paymentMethods.count(reg.registrationID)) {
-                cout << "Payment Method  : " << paymentMethods[reg.registrationID] << "\n";
+                cout << paymentMethods[reg.registrationID] << endl;
             }
-            
+            else {
+                cout << "N/A\n";
+            }
 
-            cout << string(50, '-') << endl;
+            cout << string(100, '-') << endl;
             found = true;
         }
     }
