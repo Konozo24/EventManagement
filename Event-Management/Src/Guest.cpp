@@ -13,20 +13,11 @@ using namespace std;
 
 vector<Guest> guests;
 
-Guest::Guest() : guestID("0"), name(""), eventName(""), checkedIn(false), checkInTime("") {}
+Guest::Guest() : guestID("0"), name(""), eventName(""){}
 Guest::Guest(const string& id, const string& guestName, const string& event)
-    : guestID(id), name(guestName), eventName(event), checkedIn(false), checkInTime("") {
-}
+    : guestID(id), name(guestName), eventName(event) { }
 
-void Guest::checkIn() {
-    checkedIn = true;
-    time_t now = time(0);
-    char buf[26];
-    ctime_s(buf, sizeof(buf), &now);
-    checkInTime = string(buf);
-    if (!checkInTime.empty() && checkInTime.back() == '\n')
-        checkInTime.pop_back();
-}
+
 
 // Load guests from guest file
 void loadGuestsFromFile() {
@@ -53,8 +44,6 @@ void loadGuestsFromFile() {
             guest.guestID = tokens[0];
             guest.name = tokens[1];
             guest.eventName = tokens[2];
-            guest.checkedIn = (tokens.size() > 3) ? (tokens[3] == "1") : false;
-            guest.checkInTime = (tokens.size() > 4) ? tokens[4] : "";
             guests.push_back(guest);
         }
     }
@@ -73,54 +62,20 @@ void saveGuestsToFile() {
         file << guest.guestID << "|"
             << guest.name << "|"
             << guest.eventName << "|"
-            << (guest.checkedIn ? "1" : "0") << "|"
-            << guest.checkInTime
             << "\n";
     }
 
     file.close();
 }
 
-// Display registered guests in formatted table
-void displayRegisteredGuests() {
-    cout << "\n" << string(80, '=') << endl;
-    cout << "                    REGISTERED GUESTS" << endl;
-    cout << string(80, '=') << endl;
 
-    if (guests.empty()) {
-        cout << "No guests are currently registered for any events." << endl;
-        cout << string(80, '=') << endl;
-        return;
-    }
-
-    cout << left << setw(10) << "Guest ID"
-        << setw(20) << "Name"
-        << setw(25) << "Event"
-        << setw(12) << "Status"
-        << setw(20) << "Check-in Time" << endl;
-    cout << string(80, '-') << endl;
-
-    for (const auto& reg : registrations) {
-        Guest* g = findGuestByID(reg.guestID);
-        Event* e = findEventByID(reg.eventID);
-
-        if (g) {
-            cout << left << setw(10) << g->guestID
-                << setw(20) << g->name
-                << setw(25) << (e ? e->eventName : "(Event not found)")
-                << setw(12) << (g->checkedIn ? "Checked In" : "Not Checked")
-                << setw(20) << g->checkInTime << endl;
-        }
-    }
-    cout << string(80, '=') << endl;
-}
 // Validate guest ID input
 string validateGuestIDInput() {
     string guestID;
     bool validInput = false;
 
     do {
-        cout << "Enter Guest ID to check in (0 to return to menu): ";
+        cout << "Enter Guest ID (0 to return to menu): ";
         getline(cin, guestID);
 
         if (guestID == "0") return "0"; // exit signal
