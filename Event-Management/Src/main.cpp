@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "Venue.h"
 #include "Guest.h"
 #include "Booking.h"
@@ -11,6 +12,7 @@
 #include "Registration.h"
 #include "Report.h"
 #include "Utils.h"
+
 using namespace std;
 
 
@@ -18,13 +20,13 @@ using namespace std;
 int main() {
     loadVenuesFromFile();
 
-    cout << "=" << string(60, '=') << endl;
-    cout << "       EVENT MANAGEMENT MODULES" << endl;
-    cout << "=" << string(60, '=') << endl;
+    
 
 
-    int choice;
+    string input;
+    int choice = -1;
     do {
+        
         cout << "\n" << string(50, '=') << endl;
         cout << "         PRODUCT LAUNCH EVENT MANAGEMENT MENU" << endl;
         cout << string(50, '=') << endl;
@@ -39,20 +41,26 @@ int main() {
         cout << "9. Event Reporting (Admin)" << endl;
         cout << "10. Marketing (User)" << endl;
         cout << "11. Marketing (Admin)" << endl;
-        cout << "12. View My Event History" << endl;
+        cout << "12. View Guest Event History" << endl;
         cout << "0. Exit" << endl;
         cout << string(50, '-') << endl;
         cout << "Enter your choice: ";
 
-        if (!(cin >> choice)) {
-            cout << "Invalid input! Please enter a number." << endl;
-            cin.clear();
-            cin.ignore(10000, '\n');
+        getline(cin, input);
+
+        // Validate: must be digits only
+        bool isNumber = !input.empty() && all_of(input.begin(), input.end(), ::isdigit);
+
+        if (!isNumber) {
+            cout << "Invalid input! Please enter a number only." << endl;
+            cout << "\nPress Enter to continue...";
+            cin.get();
+            clearScreen();
             continue;
         }
-        cin.ignore();
-
+        choice = stoi(input);
         clearScreen();
+
         switch (choice) {
         case 1:
             bookEvent();
@@ -97,10 +105,10 @@ int main() {
             marketingAdmin();
             break;
         case 12: {
-            string guestID;
-            cout << "Enter your guestID: ";
-            getline(cin, guestID);
-            viewUserHistory(guestID);
+            string guestID = validateGuestIDInput(); // makes sure it starts with 'G' and exists
+            if (guestID != "0") { // not cancelled
+                viewUserHistory(guestID);
+            }
             break;
         }
         case 0:
