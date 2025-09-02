@@ -14,20 +14,63 @@
 using namespace std;
 
 void displayCheckInStatistics() {
-    int totalGuests = guests.size();
+    loadRegistrationFromFile();
+    int totalRegistrations = registrations.size();
     int checkedInCount = 0;
 
-    for (const auto& g : guests) {
-        if (g.checkedIn) checkedInCount++;
+    for (const auto& reg : registrations) {
+        if (reg.checkedIn) checkedInCount++;
     }
 
     cout << "\n" << string(50, '-') << endl;
     cout << "CHECK-IN STATISTICS" << endl;
     cout << string(50, '-') << endl;
-    cout << "Total Registered Guests : " << totalGuests << endl;
+    cout << "Total Registered Guests : " << totalRegistrations << endl;
     cout << "Guests Checked In       : " << checkedInCount << endl;
-    cout << "Guests Not Checked In   : " << (totalGuests - checkedInCount) << endl;
+    cout << "Guests Not Checked In   : " << (totalRegistrations - checkedInCount) << endl;
     cout << string(50, '-') << endl;
+}
+
+// Display all registered guests per event
+void displayRegisteredGuests() {
+    loadRegistrationFromFile();
+    loadGuestsFromFile();
+    loadEventsFromFile();
+
+    cout << "\n" << string(100, '=') << endl;
+    cout << "                REGISTERED GUESTS (All Events)" << endl;
+    cout << string(100, '=') << endl;
+
+    if (registrations.empty()) {
+        cout << "No registrations found.\n";
+        cout << string(100, '=') << endl;
+        return;
+    }
+
+    cout << left << setw(8) << "RegID"
+        << setw(10) << "GuestID"
+        << setw(20) << "Guest Name"
+        << setw(20) << "Event"
+        << setw(10) << "Tickets"
+        << setw(12) << "Status"
+        << setw(25) << "Check-in Time" << endl;
+    cout << string(100, '-') << endl;
+
+    for (const auto& reg : registrations) {
+        Guest* g = findGuestByID(reg.guestID);
+        Event* e = findEventByID(reg.eventID);
+
+        cout << left << setw(8) << reg.registrationID
+            << setw(10) << reg.guestID
+            << setw(20) << (g ? g->name : "(Unknown)")
+            << setw(20) << (e ? e->eventName : "(Unknown)")
+            << setw(10) << reg.ticketsBought
+            << setw(12) << (reg.checkedIn ? "Checked In" : "Not Checked")
+            << setw(25) << (reg.checkedIn ? reg.checkInTime : "-")
+            << endl;
+    }
+
+    cout << string(100, '=') << endl;
 }
 
 void markVenueAsAvailable() {
@@ -132,36 +175,41 @@ void monitorEvent() {
                     Guest* g = findGuestByID(reg.guestID);
                     Event* e = findEventByID(reg.eventID);
 
-                    if (g) {
-                        if (g->checkedIn) {
-                            cout << "\nGuest " << g->name << " (ID: " << g->guestID
-                                << ") is already checked in at " << g->checkInTime << endl;
-                        }
-                        else {
-                            g->checkIn();
-                            saveGuestsToFile(); // save changes immediately
+                    if (!e) {
+                        cout << "\nCannot check in. The event for this registration no longer exists (venue was freed).\n";
+                        break;
+                    }
 
-                            cout << "\n" << string(50, '*') << endl;
-                            cout << "CHECK-IN SUCCESSFUL!" << endl;
-                            cout << "Guest: " << g->name << endl;
-                            cout << "Guest ID: " << g->guestID << endl;
-                            if (e) cout << "Event: " << e->eventName << endl;
-                            cout << "Time: " << g->checkInTime << endl;
-                            cout << string(50, '*') << endl;
-                        }
+                    if (reg.checkedIn) {
+                        cout << "\nGuest " << (g ? g->name : "(Unknown)")
+                            << " (ID: " << reg.guestID
+                            << ") is already checked in at " << reg.checkInTime << endl;
                     }
                     else {
-                        cout << "\nGuest not found for Registration ID " << reg.registrationID << endl;
+                        // Mark as checked in
+                        reg.checkedIn = true;
+                        time_t now = time(0);
+                        char buf[26];
+                        ctime_s(buf, sizeof(buf), &now);
+                        reg.checkInTime = string(buf);
+                        if (!reg.checkInTime.empty() && reg.checkInTime.back() == '\n')
+                            reg.checkInTime.pop_back();
+
+                        saveRegistrationToFile();
+
+                        cout << "\n" << string(50, '*') << endl;
+                        cout << "CHECK-IN SUCCESSFUL!" << endl;
+                        cout << "Guest: " << (g ? g->name : "(Unknown)") << endl;
+                        cout << "Guest ID: " << reg.guestID << endl;
+                        if (e) cout << "Event: " << e->eventName << endl;
+                        cout << "Time: " << reg.checkInTime << endl;
+                        cout << string(50, '*') << endl;
+
                     }
-                    
                     break;
 
-
                 }
-
-
             }
-
             if (!found) {
                 cout << "\nRegistration ID " << regID << " not found!" << endl;
             }
