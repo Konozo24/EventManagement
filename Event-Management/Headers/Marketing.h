@@ -3,7 +3,6 @@
 #define MARKETING_H
 #include <vector>
 #include "Event.h"       
-#include "Product.h"
 using namespace std;
 
 struct MarketingItem {
