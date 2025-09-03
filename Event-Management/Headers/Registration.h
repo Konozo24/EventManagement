@@ -10,12 +10,12 @@ struct Registration {
     string registrationID;   // e.g. "R1", "R2"
     string eventID;          // link to Event (e.g. "E1")
     string eventName;
-	string eventDate;   
+    string eventDate;
     string guestID;
     string userName;         // who registered
     int ticketsBought;       // number of tickets bought
-	double registrationCost; // total cost
-    
+    double registrationCost; // total cost
+
     bool checkedIn;
     string checkInTime;
 
@@ -37,8 +37,7 @@ void displayRegistration();
 // GenerateID
 string generateRegistrationID();
 
-// Event history 
-void viewUserHistory(const string& userName);
+
 
 //Validation
 string validateRegistrationIDInput();
