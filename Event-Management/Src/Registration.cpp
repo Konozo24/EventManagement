@@ -121,151 +121,15 @@ void displayRegistration() {
             << setw(10) << (reg.checkedIn ? "Yes" : "No")
             << setw(20) << (reg.checkedIn ? reg.checkInTime : "-")
             << endl;
-       
+
     }
     cout << string(100, '=') << endl;
 }
 
 string generateRegistrationID() {
-  
+
     string id = "R" + to_string(nextRegistrationID++);
     return id;
-}
-
-void viewUserHistory(const string& guestID) {
-    loadRegistrationFromFile();
-
-    cout << "\n" << string(50, '=') << endl;
-    cout << "        EVENT HISTORY FOR GUEST: " << guestID << endl;
-    cout << string(50, '=') << endl << endl;
-
-    // ===== Step 1: Read receipt.txt once into a map =====
-    ifstream file("receipt.txt");
-    map<string, vector<string>> purchases; // regID -> items
-    map<string, string> paymentMethods;    // regID -> payment method
-
-    if (file.is_open()) {
-        string line, currentRegID;
-        bool productSection = false;
-
-        while (getline(file, line)) {
-            if (line.find("Receipt #") != string::npos) {
-                currentRegID.clear();
-                productSection = false;
-            }
-
-            if (line.find("Registration ID") != string::npos) {
-                size_t pos = line.find(":");
-                if (pos != string::npos) {
-                    currentRegID = line.substr(pos + 1);
-                    // trim spaces
-                    currentRegID.erase(0, currentRegID.find_first_not_of(" \t"));
-                }
-            }
-
-            if (!currentRegID.empty()) {
-                if (line.find("Product") != string::npos &&
-                    line.find("Product Total") == string::npos) // ignore totals
-                {
-                    size_t pos = line.find(":");
-                    if (pos != string::npos) {
-                        string item = line.substr(pos + 1);
-                        item.erase(0, item.find_first_not_of(" \t")); // trim left spaces
-
-                        if (item == "None") {
-                            purchases[currentRegID].push_back("None");
-                        }
-                        else if (!item.empty()) {
-                            purchases[currentRegID].push_back(item);
-                        }
-                    }
-                }
-                else if (productSection) {
-                    if (line.find("Ticket Price") != string::npos ||
-                        line.find("Product Total") != string::npos ||
-                        line.find("Total") != string::npos) {
-                        productSection = false;
-                    }
-                    else {
-                        purchases[currentRegID].push_back(line);
-                    }
-                }
-
-                if (line.find("Payment Method") != string::npos) {
-                    size_t pos = line.find(":");
-                    if (pos != string::npos) {
-                        string method = line.substr(pos + 1);
-                        method.erase(0, method.find_first_not_of(" \t"));
-                        paymentMethods[currentRegID] = method;
-                    }
-                }
-            }
-        }
-        file.close();
-    }
-
-
-    bool found = false;
-    bool headerPrinted = false;
-
-
-    for (const auto& reg : registrations) {
-        if (reg.guestID == guestID) {
-            if (!headerPrinted) {
-                cout << left << setw(8) << "RegID"
-                    << setw(6) << "EvID"
-                    << setw(20) << "Event Name"
-                    << setw(12) << "Date"
-                    << setw(8) << "Tickets"
-                    << setw(12) << "Cost(RM)"
-                    << setw(10) << "Checked"
-                    << setw(20) << "Check-in Time" << endl;
-                cout << string(100, '-') << endl;
-                headerPrinted = true;
-            }
-
-            cout << left << setw(8) << reg.registrationID
-                << setw(6) << reg.eventID
-                << setw(20) << reg.eventName
-                << setw(12) << reg.eventDate
-                << setw(8) << reg.ticketsBought
-                << setw(12) << fixed << setprecision(2) << reg.registrationCost
-                << setw(10) << (reg.checkedIn ? "Yes" : "No")
-                << setw(20) << (reg.checkedIn ? reg.checkInTime : "-")
-                << endl;
-          
-            // Show purchases
-            cout << setw(15) << "\n" << "Purchased Items: ";
-            if (purchases.count(reg.registrationID) && !purchases[reg.registrationID].empty()) {
-                for (size_t i = 0; i < purchases[reg.registrationID].size(); ++i) {
-                    if (i > 0) cout << setw(15) << ""; // indent for subsequent items
-                    cout << purchases[reg.registrationID][i] << endl;
-                }
-            }
-            else {
-                cout << "None\n";
-            }
-            // Show payment method
-            cout << setw(15) << "" << "Payment Method: ";
-            if (paymentMethods.count(reg.registrationID)) {
-                cout << paymentMethods[reg.registrationID] << endl;
-            }
-            else {
-                cout << "N/A\n";
-            }
-
-            cout << string(100, '-') << endl;
-            found = true;
-        }
-    }
-
-    if (!found) {
-        cout << "No event registrations found for this guest.\n";
-    }
-
-    cout << "\nPress Enter to continue...";
-    cin.get();
-    clearScreen();
 }
 
 string validateRegistrationIDInput() {
