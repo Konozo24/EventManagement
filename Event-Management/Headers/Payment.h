@@ -4,7 +4,6 @@
 
 #include <string>
 #include <vector>
-#include "Product.h"
 #include "Registration.h"
 #include "Event.h"
 using namespace std;
