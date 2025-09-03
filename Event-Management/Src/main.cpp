@@ -12,40 +12,54 @@
 #include "Registration.h"
 #include "Report.h"
 #include "Utils.h"
+#include "Login.h"
+#include "History.h"
 
 using namespace std;
 
+void printMainMenu() {
+    cout << "\n" << string(60, '=') << endl;
+    cout << "           PRODUCT LAUNCH EVENT MANAGEMENT SYSTEM " << endl;
+    cout << string(60, '=') << endl;
+
+    cout << "\n---------------General Options---------------\n";
+    cout << "  1. Register for Events / Ticketing\n";
+    cout << "  2. View Receipts\n";
+    cout << "  3. Submit Feedback & Review\n";
+    cout << "  4. Marketing (User)\n";
+    cout << "  5. View Event History Participate\n";
+	cout << "  6. View Admin Options (Login required)\n";
+    cout << "\n---------------Exit---------------\n";
+    cout << "  0. Exit Program\n";
+
+    cout << string(60, '-') << endl;
+    cout << "Enter your choice: ";
+}
+
+void printAdminMenu() {
+    cout << "\n--- Admin Options ---\n";
+    cout << "  1. Event Booking\n";
+    cout << "  2. Event Monitoring\n";
+    cout << "  3. View Available Venues\n";
+    cout << "  4. View Receipts (Admin)\n";
+    cout << "  5. View Feedbacks (Admin)\n";
+    cout << "  6. Event Reporting\n";
+    cout << "  7. Marketing (Admin)\n";
+    cout << "  8. Admin Logout\n";
+
+    cout << string(60, '-') << endl;
+    cout << "Enter your choice: ";
+}
 
 
 int main() {
     loadVenuesFromFile();
 
-    
-
-
     string input;
     int choice = -1;
     do {
-        
-        cout << "\n" << string(50, '=') << endl;
-        cout << "         PRODUCT LAUNCH EVENT MANAGEMENT MENU" << endl;
-        cout << string(50, '=') << endl;
-        cout << "1. Event Booking (Module 1)" << endl;
-        cout << "2. Event Monitoring (Module 2)" << endl;
-        cout << "3. View Available Venues" << endl;
-        cout << "4. View Receipts Guest (Module 6)" << endl;
-        cout << "5. Submit Feedback & Review (Module 7)" << endl;
-        cout << "6. View Receipts (Admin)" << endl;
-        cout << "7. View Feedbacks (Admin)" << endl;
-        cout << "8. Register Events / Ticketing" << endl;
-        cout << "9. Event Reporting (Admin)" << endl;
-        cout << "10. Marketing (User)" << endl;
-        cout << "11. Marketing (Admin)" << endl;
-        cout << "12. View Guest Event History" << endl;
-        cout << "0. Exit" << endl;
-        cout << string(50, '-') << endl;
-        cout << "Enter your choice: ";
 
+        printMainMenu();
         getline(cin, input);
 
         // Validate: must be digits only
@@ -63,62 +77,107 @@ int main() {
 
         switch (choice) {
         case 1:
-            bookEvent();
-            break;
-        case 2:
-            monitorEvent();
-            clearScreen();
-            break;
-        case 3:
-            loadVenuesFromFile();
-            displayAvailableVenues();
-            cout << "\nPress Enter to continue...";
-            cin.get();
-            clearScreen();
-            break;
-        case 4: {
-            viewReceipts();
-            break;
-        }
-        case 5:
-            submitFeedback();
-            break;
-        case 6:
-            viewReceipts();
-            break;
-        case 7:
-            viewFeedback();
-            break;
-        case 8:
             tickets();
             break;
-        case 9: {
-            Report report;
-            report.displayReportMenu();
+
+        case 2:
+            viewReceipts(); 
+            break;
+
+        case 3:
+            submitFeedback();
+            break;
+
+        case 4:
+            marketingUser();
+            break;
+
+        case 5: {
+            string guestID;
+            cout << "Enter your Guest ID: ";
+            getline(cin, guestID);
+            viewUserHistory(guestID);
             break;
         }
-            
-        case 10:
-            marketingUser(); 
-            break;
-        case 11:
-            marketingAdmin();
-            break;
-        case 12: {
-            string guestID = validateGuestIDInput(); // makes sure it starts with 'G' and exists
-            if (guestID != "0") { // not cancelled
-                viewUserHistory(guestID);
+
+        case 6: {
+            if (!requireAdminLogin()) {
+                adminLogin();
+                if (!isAdminLoggedIn) {
+					clearScreen();
+                    break; // back to main if login fails/cancelled
+                }
             }
+
+            int adminChoice = -1;
+            do {
+                printAdminMenu();
+                getline(cin, input);
+
+                bool isNumber = !input.empty() && all_of(input.begin(), input.end(), ::isdigit);
+                if (!isNumber) {
+                    cout << "Invalid input! Please enter a number only.\n";
+                    cout << "\nPress Enter to continue...";
+                    cin.get();
+                    clearScreen();
+                    continue;
+                }
+
+                adminChoice = stoi(input);
+                clearScreen();
+
+                switch (adminChoice) {
+                case 1: 
+                    bookEvent(); 
+                    break;
+                case 2: 
+                    monitorEvent(); 
+                    break;
+                case 3: {
+                    loadVenuesFromFile();
+                    displayAvailableVenues();
+                } break;
+                case 4: 
+                    viewReceipts(); 
+                    break;
+                case 5: 
+                    viewFeedback(); 
+                    break;
+                case 6: { 
+                    Report r; 
+                    r.displayReportMenu(); 
+                } break;
+                case 7: 
+                    marketingAdmin(); 
+                    break;
+                case 8: 
+                    adminLogout(); 
+                    adminChoice = 0; 
+                    break;
+
+                case 0: 
+                    cout << "Returning to Main Menu...\n"; 
+                    break;
+
+                default: 
+                    cout << "Invalid choice! Try again.\n"; 
+                    break;
+                }
+            } while (adminChoice != 0);
             break;
+
         }
+
         case 0:
             cout << "\nThank you for using the system!" << endl;
             break;
+
         default:
-            cout << "Invalid choice! Please select 0-7." << endl;
+            cout << "Invalid choice! Please select a valid menu option." << endl;
+            break;
         }
 
-    } while (choice != 0);
 
-    return 0;
+	} while (choice != 0);
+	return 0;
 }
