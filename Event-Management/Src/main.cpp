@@ -28,7 +28,7 @@ void printMainMenu() {
     cout << "  3. Submit Feedback & Review\n";
     cout << "  4. Marketing (User)\n";
     cout << "  5. View Event History Participate\n";
-	cout << "  6. View Admin Options (Login required)\n";
+    cout << "  6. View Admin Options (Login required)\n";
     cout << "\n---------------Exit---------------\n";
     cout << "  0. Exit Program\n";
 
@@ -81,7 +81,7 @@ int main() {
             break;
 
         case 2:
-            viewReceipts(); 
+            viewReceipts();
             break;
 
         case 3:
@@ -94,8 +94,12 @@ int main() {
 
         case 5: {
             string guestID;
-            cout << "Enter your Guest ID: ";
+            cout << "Enter your Guest ID or 0 to cancel: ";
             getline(cin, guestID);
+            if (guestID == "0") {
+                clearScreen();
+                break;  // go back to menu
+            }
             viewUserHistory(guestID);
             break;
         }
@@ -104,7 +108,7 @@ int main() {
             if (!requireAdminLogin()) {
                 adminLogin();
                 if (!isAdminLoggedIn) {
-					clearScreen();
+                    clearScreen();
                     break; // back to main if login fails/cancelled
                 }
             }
@@ -127,40 +131,43 @@ int main() {
                 clearScreen();
 
                 switch (adminChoice) {
-                case 1: 
-                    bookEvent(); 
+                case 1:
+                    bookEvent();
                     break;
-                case 2: 
-                    monitorEvent(); 
+                case 2:
+                    monitorEvent();
                     break;
                 case 3: {
                     loadVenuesFromFile();
                     displayAvailableVenues();
+					cout << "Press Enter to continue...";
+					cin.get();
+					clearScreen();
                 } break;
-                case 4: 
-                    viewReceipts(); 
+                case 4:
+                    viewReceipts();
                     break;
-                case 5: 
-                    viewFeedback(); 
+                case 5:
+                    viewFeedback();
                     break;
-                case 6: { 
-                    Report r; 
-                    r.displayReportMenu(); 
+                case 6: {
+                    Report r;
+                    r.displayReportMenu();
                 } break;
-                case 7: 
-                    marketingAdmin(); 
+                case 7:
+                    marketingAdmin();
                     break;
-                case 8: 
-                    adminLogout(); 
-                    adminChoice = 0; 
+                case 8:
+                    adminLogout();
+                    adminChoice = 0;
                     break;
 
-                case 0: 
-                    cout << "Returning to Main Menu...\n"; 
+                case 0:
+                    cout << "Returning to Main Menu...\n";
                     break;
 
-                default: 
-                    cout << "Invalid choice! Try again.\n"; 
+                default:
+                    cout << "Invalid choice! Try again.\n";
                     break;
                 }
             } while (adminChoice != 0);
@@ -178,6 +185,6 @@ int main() {
         }
 
 
-	} while (choice != 0);
-	return 0;
+    } while (choice != 0);
+    return 0;
 }
