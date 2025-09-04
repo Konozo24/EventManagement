@@ -46,8 +46,15 @@ void submitFeedback() {
     int rating;
 
     cout << "\n====== Feedback ======";
-    cout << "\nEnter Guest ID: ";
+    cout << "\nEnter Guest ID or 0 to back: ";
     cin >> guestID;
+    if (guestID == "0") {
+        clearScreen();
+        cin.clear();
+        cin.ignore();
+        return;  // cancel
+    }
+
     cin.ignore();
     cout << "Enter Name: ";
     getline(cin, name);
