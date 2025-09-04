@@ -243,6 +243,7 @@ void monitorEvent() {
             cout << "Returning to main menu..." << endl;
             cout << "\nPress Enter to continue...";
             cin.get();
+            clearScreen();
             break;
 
         default:
