@@ -283,8 +283,13 @@ void marketingUser() {
         displayEventsForRegistration();
 
         cout << "\nEnter Event Name to view products (or 'cancel'): ";
-        string evName; getline(cin, evName);
-        if (evName == "cancel") { clearScreen(); return; }
+        string evName;
+        getline(cin, evName);
+
+        if (evName == "cancel") {
+            clearScreen();
+            return;
+        }
 
         Event* ev = findEventByName(evName);
         if (!ev) {
@@ -296,64 +301,31 @@ void marketingUser() {
 
         loadProductsFromFile();
         vector<MarketingItem*> evProducts;
-        for (auto& it : products) if (it.eventID == ev->eventID) evProducts.push_back(&it);
+        for (auto& it : products)
+            if (it.eventID == ev->eventID)
+                evProducts.push_back(&it);
 
         clearScreen();
         cout << "\n" << string(60, '=') << endl;
-        cout << "        PRODUCTS FOR EVENT " << ev->eventName << endl;
+        cout << "     PRODUCTS FOR EVENT: " << ev->eventName << endl;
         cout << string(60, '=') << endl;
 
         if (evProducts.empty()) {
             cout << "No products available for this event.\n";
-            cout << "\nPress Enter to return..."; cin.get(); clearScreen(); continue;
+        }
+        else {
+            for (size_t i = 0; i < evProducts.size(); ++i) {
+                auto* p = evProducts[i];
+                cout << setw(3) << (i + 1) << ". "
+                    << left << setw(30) << p->name
+                    << " RM" << fixed << setprecision(2) << setw(8) << p->price
+                    << " Stock: " << p->quantity;
+                if (p->quantity == 0) cout << " (OUT OF STOCK)";
+                cout << "\n";
+            }
         }
 
-        for (size_t i = 0; i < evProducts.size(); ++i) {
-            auto* p = evProducts[i];
-            cout << setw(3) << (i + 1) << ". "
-                << left << setw(30) << p->name
-                << " RM" << fixed << setprecision(2) << setw(8) << p->price
-                << " Stock: " << p->quantity;
-            if (p->quantity == 0) cout << " (OUT OF STOCK)";
-            cout << "\n";
-        }
-
-        cout << "\nEnter product number to buy (or 'cancel'): ";
-        string pick; getline(cin, pick);
-        if (pick == "cancel") { clearScreen(); continue; }
-        if (!isAllDigits(pick)) { clearScreen(); continue; }
-        int idx = 0;
-        try {
-            idx = stoi(pick) - 1;
-        }
-        catch (...) { clearScreen(); continue; }
-        if (idx < 0 || idx >= (int)evProducts.size()) { clearScreen(); continue; }
-
-        MarketingItem* selected = evProducts[idx];
-        if (selected->quantity == 0) { clearScreen(); cout << "This product is out of stock!\nPress Enter..."; cin.get(); continue; }
-
-        int qty;
-        if (!readInt("Enter quantity (or 'cancel'): ", qty, 1, selected->quantity, true)) { clearScreen(); continue; }
-
-        selected->quantity -= qty;
-        if (selected->quantity < 0) selected->quantity = 0;
-        saveProductsToFile();
-
-        // Confirmation screen
-        clearScreen();
-        cout << "\n" << string(60, '=') << endl;
-        cout << "           PURCHASE CONFIRMATION" << endl;
-        cout << string(60, '=') << endl;
-        cout << "Event       : " << ev->eventName << " (" << ev->eventID << ")\n";
-        cout << "Product     : " << selected->name << "\n";
-        cout << "Unit Price  : RM" << fixed << setprecision(2) << selected->price << "\n";
-        cout << "Quantity    : " << qty << "\n";
-        cout << "Total Paid  : RM" << fixed << setprecision(2) << (qty * selected->price) << "\n";
-        cout << string(60, '=') << endl;
-        cout << "Status      : Purchase Successful!" << endl;
-        cout << string(60, '=') << endl;
-
-        cout << "\nPress Enter to continue...";
+        cout << "\nPress Enter to return...";
         cin.get();
         clearScreen();
     }
