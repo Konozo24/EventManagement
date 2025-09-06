@@ -3,6 +3,7 @@
 #include "Registration.h"
 #include "Utils.h"
 #include "Marketing.h"
+#include "Product.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -85,10 +86,12 @@ void saveReceipt(const Registration& reg, const vector<MarketingItem>& selectedP
 
 // ===== Main: Checkout process =====
 void processPayment(Registration& reg, Event* ev) {
+	RegistrationManager regManager;
+	MarketingManager marketingManager;
     
     // Load registrations from file
-    loadRegistrationFromFile();
-    loadProductsFromFile();
+    regManager.loadRegistrationFromFile();
+    marketingManager.loadProductsFromFile();
 
     vector<MarketingItem> selectedProducts;
     
@@ -103,7 +106,7 @@ void processPayment(Registration& reg, Event* ev) {
     cout << "Ticket Total: RM" << fixed << setprecision(2) << reg.registrationCost << endl;
 
     // --- Dynamic 2D Array for product payment details ---
-    int maxProducts = products.size();
+    int maxProducts = marketingManager.getProducts().size();
     double** paymentData = new double* [maxProducts];
     for (int i = 0; i < maxProducts; i++) {
         paymentData[i] = new double[3]; // [price, qty, subtotal]
@@ -113,17 +116,17 @@ void processPayment(Registration& reg, Event* ev) {
     }
 
     // === Let user select products ===
-    if (!products.empty()) {
+    if (!marketingManager.getProducts().empty()) {
         vector<int> availableIndices; // maps displayed number to actual product index
         int displayIndex = 1;
 
         cout << "\nAvailable Products:\n";
        
-        for (size_t i = 0; i < products.size(); ++i) {
-            if (products[i].eventID == reg.eventID && products[i].quantity > 0) {
-                cout << displayIndex << ". " << products[i].name
-                    << " (RM" << fixed << setprecision(2) << products[i].price
-                    << ") | Stock: " << products[i].quantity << "\n";
+        for (size_t i = 0; i < marketingManager.getProducts().size(); ++i) {
+            if (marketingManager.getProducts()[i].eventID == reg.eventID && marketingManager.getProducts()[i].quantity > 0) {
+                cout << displayIndex << ". " << marketingManager.getProducts()[i].name
+                    << " (RM" << fixed << setprecision(2) << marketingManager.getProducts()[i].price
+                    << ") | Stock: " << marketingManager.getProducts()[i].quantity << "\n";
                 availableIndices.push_back(i);
                 displayIndex++;
             }
@@ -156,7 +159,7 @@ void processPayment(Registration& reg, Event* ev) {
                     continue;
                 }
 
-                MarketingItem& item = products[availableIndices[choice - 1]];
+                MarketingItem& item = marketingManager.getProducts()[availableIndices[choice - 1]];
 
                 // Quantity input
                 int qty = 0;
@@ -210,8 +213,8 @@ void processPayment(Registration& reg, Event* ev) {
                     // Rebuild availableIndices for next display
                     availableIndices.clear();
                     displayIndex = 1;
-                    for (size_t i = 0; i < products.size(); ++i) {
-                        if (products[i].eventID == reg.eventID && products[i].quantity > 0) {
+                    for (size_t i = 0; i < marketingManager.getProducts().size(); ++i) {
+                        if (marketingManager.getProducts()[i].eventID == reg.eventID && marketingManager.getProducts()[i].quantity > 0) {
                             availableIndices.push_back(i);
                             displayIndex++;
                         }
@@ -224,7 +227,7 @@ void processPayment(Registration& reg, Event* ev) {
 
     // === Calculate totals ===
     double productTotal = 0.0;
-    for (int i = 0; i < products.size(); i++) {
+    for (int i = 0; i < marketingManager.getProducts().size(); i++) {
         productTotal += paymentData[i][2];
     }
 
@@ -252,7 +255,7 @@ void processPayment(Registration& reg, Event* ev) {
     } while (!validMethod);
 
     // Save updated product stock
-    saveProductsToFile();
+    marketingManager.saveProductsToFile();
 
     // Save receipt
     saveReceipt(reg, selectedProducts, method);
