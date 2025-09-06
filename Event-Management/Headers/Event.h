@@ -24,19 +24,27 @@ struct Event {
     }
 };
 
-// Global list of events
-extern vector<Event> events;
+class EventManager {
+private:
+    vector<Event> events;
 
-// File handling
-void loadEventsFromFile();
-void saveEventsToFile();
 
-// Display
-void displayEvents();
-void displayEventsForRegistration();
+public:
 
-// Searching
-Event* findEventByName(const string& name);
-Event* findEventByID(const string& eventID);
+    // File handling
+    void loadEventsFromFile();
+    void saveEventsToFile();
+
+    // Display
+    void displayEvents();
+    void displayEventsForRegistration();
+
+    // Searching
+    Event* findEventByName(const string& name);
+    Event* findEventByID(const string& eventID);
+
+    // Accessor
+    vector<Event>& getEvents() { return events; }
+};
 
 #endif
