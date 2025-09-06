@@ -53,7 +53,10 @@ void printAdminMenu() {
 
 
 int main() {
-    loadVenuesFromFile();
+	VenueManager venueManager;
+    MarketingManager marketManager;
+    Report report;
+    venueManager.loadVenuesFromFile();
 
     string input;
     int choice = -1;
@@ -89,7 +92,7 @@ int main() {
             break;
 
         case 4:
-            marketingUser();
+            marketManager.marketingUser();
             break;
 
         case 5: {
@@ -138,8 +141,8 @@ int main() {
                     monitorEvent();
                     break;
                 case 3: {
-                    loadVenuesFromFile();
-                    displayAvailableVenues();
+                    venueManager.loadVenuesFromFile();
+                    venueManager.displayAvailableVenues();
 					cout << "Press Enter to continue...";
 					cin.get();
 					clearScreen();
@@ -150,12 +153,11 @@ int main() {
                 case 5:
                     viewFeedback();
                     break;
-                case 6: {
-                    Report r;
-                    r.displayReportMenu();
-                } break;
-                case 7:
-                    marketingAdmin();
+                case 6: 
+                    report.displayReportMenu();
+                    break;
+                case 7: 
+                    marketManager.marketingAdmin();
                     break;
                 case 8:
                     adminLogout();
