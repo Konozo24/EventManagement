@@ -18,22 +18,31 @@ struct Venue {
     Venue(const string& id, const string& venueName, int cap, const string& loc, double venueCost);
 };
 
-extern vector<Venue> venues;   // declare global
+class VenueManager {
+private:
+	vector<Venue> venues;
 
-// Global accessors
-bool isVenueAvailable(int venueID);
-Venue getVenueDetails(int venueID);
+public:
+    // File handling
+    void loadVenuesFromFile();
+    void saveVenuesToFile();
+    void initializeDefaultVenues();
 
-// File handling
-void loadVenuesFromFile();
-void saveVenuesToFile();
-void initializeDefaultVenues();
-bool isValidVenueFormat(const string& input);
-string validateVenueSelection();
-string validateBookedVenueSelection();
+    // Validation
+    bool isValidVenueFormat(const string& input) const;
+    string validateVenueSelection() const;
+    string validateBookedVenueSelection() const;
 
-// Display
-void displayAvailableVenues();
-void displayAllVenues();
+    // Global accessors
+    bool isVenueAvailable(const string& venueID);
+    Venue getVenueDetails(const string& venueID);
+    vector<Venue>& getVenues();
+
+    // Display
+    void displayAvailableVenues();
+    void displayAllVenues();
+};
+
+
 
 #endif
