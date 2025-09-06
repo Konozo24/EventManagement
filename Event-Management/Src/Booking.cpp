@@ -17,18 +17,22 @@ void bookEvent() {
     cout << "               EVENT BOOKING SYSTEM" << endl;
     cout << string(60, '=') << endl;
 
+    // Create a VenueManager and EventManager instance
+    VenueManager venueManager;
+	EventManager eventManager;
+
     // Load venues from file
-    loadVenuesFromFile();
+    venueManager.loadVenuesFromFile();
 
     // Display available venues
-    displayAvailableVenues();
+    venueManager.displayAvailableVenues();
 
     // Check if any venues are available
     bool hasAvailable = false;
-    for (const auto& venue : venues) {
+    for (const auto& venue : venueManager.getVenues()) {
         if (!venue.isBooked) {
             hasAvailable = true;
-            break;
+            break;  
         }
     }
 
@@ -80,7 +84,7 @@ void bookEvent() {
     } while (!isValidDateFormat(eventDate));
 
     // Venue selection with validation
-    string selectedVenueID = validateVenueSelection();
+    string selectedVenueID = venueManager.validateVenueSelection();
     if (selectedVenueID == "0") {
         cout << "Booking cancelled." << endl;
         return;
@@ -129,7 +133,7 @@ void bookEvent() {
 
     // Find venue capacity & Update venue booking status
     int ticketAmount = 0;
-    for (auto& venue : venues) {
+    for (auto& venue : venueManager.getVenues()) {
         if (venue.venueID == selectedVenueID) {
             venue.isBooked = true;
             venue.usageCount++;
@@ -139,7 +143,7 @@ void bookEvent() {
     }
 
     // Generate event ID (auto-increment)
-    int nextEventNum = events.empty() ? 1 : stoi(events.back().eventID.substr(1)) + 1;
+    int nextEventNum = eventManager.getEvents().empty() ? 1 : stoi(eventManager.getEvents().back().eventID.substr(1)) + 1;
     string newEventID = "E" + to_string(nextEventNum);
 
     // Create new Event object
@@ -147,13 +151,13 @@ void bookEvent() {
         vendorDetails, ticketPrice, ticketAmount);
 
     // Add to global vector
-    events.push_back(newEvent);
+    eventManager.getEvents().push_back(newEvent);
 
     // Save all events to file
-    saveEventsToFile();
+    eventManager.saveEventsToFile();
 
     // Save updated venues
-    saveVenuesToFile();
+    venueManager.saveVenuesToFile();
 
     // Display booking confirmation
     cout << "\n" << string(60, '=') << endl;
