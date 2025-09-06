@@ -5,6 +5,9 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include "Registration.h"
+#include "Guest.h"
+
 using namespace std;
 
 struct BookingSummary {
@@ -31,7 +34,7 @@ public:
     void generateReport();
     void displayReportMenu();
     void displaySummary();
-    void displayAttendance();
+    void displayAttendance(RegistrationManager& regManager, GuestManager& guestManager);
     void displayVenueStats();
 };
 
