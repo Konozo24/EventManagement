@@ -9,7 +9,6 @@
 using namespace std;
 
 
-vector<Venue> venues;
 
 namespace {
     
@@ -24,7 +23,7 @@ Venue::Venue(const string& id, const string& venueName, int cap, const string& l
     : venueID(id), name(venueName), capacity(cap), location(loc), cost(venueCost), isBooked(false), usageCount(0) {
 }
 
-void initializeDefaultVenues() {
+void VenueManager::initializeDefaultVenues() {
     venues.clear();
     nextVenueID = 1; // reset when creating defaults
 
@@ -39,7 +38,7 @@ void initializeDefaultVenues() {
     saveVenuesToFile();
 }
 
-void loadVenuesFromFile() {
+void VenueManager::loadVenuesFromFile() {
     ifstream file(VENUES_FILE);
     if (!file.is_open()) {
         cout << "Creating new venues file with default venues..." << endl;
@@ -90,7 +89,7 @@ void loadVenuesFromFile() {
     }
 }
 
-void saveVenuesToFile() {
+void VenueManager::saveVenuesToFile() {
     ofstream file(VENUES_FILE);
     if (!file.is_open()) {
         cout << "Error: Cannot save venues to file!" << endl;
@@ -109,7 +108,7 @@ void saveVenuesToFile() {
     file.close();
 }
 
-void displayAvailableVenues() {
+void VenueManager::displayAvailableVenues() {
     cout << "\n" << string(80, '=') << endl;
     cout << "                      AVAILABLE VENUES" << endl;
     cout << string(80, '=') << endl;
@@ -140,7 +139,7 @@ void displayAvailableVenues() {
     cout << string(80, '=') << endl;
 }
 
-void displayAllVenues() {
+void VenueManager::displayAllVenues() {
     cout << "\n" << string(80, '=') << endl;
     cout << "                      VENUES" << endl;
     cout << string(80, '=') << endl;
@@ -166,7 +165,7 @@ void displayAllVenues() {
 
 
 // Check if venue is available (for other modules to use)
-bool isVenueAvailable(const string& venueID) {
+bool VenueManager::isVenueAvailable(const string& venueID) {
     loadVenuesFromFile();
     for (const auto& venue : venues) {
         if (venue.venueID == venueID && !venue.isBooked) {
@@ -177,7 +176,7 @@ bool isVenueAvailable(const string& venueID) {
 }
 
 // Get venue details (for other modules to use)
-Venue getVenueDetails(const string& venueID) {
+Venue VenueManager::getVenueDetails(const string& venueID) {
     loadVenuesFromFile();
     for (const auto& venue : venues) {
         if (venue.venueID == venueID) {
@@ -187,7 +186,12 @@ Venue getVenueDetails(const string& venueID) {
     return Venue(); // Return empty venue if not found
 }
 
-bool isValidVenueFormat(const string& input) {
+// Get modifiable venues
+vector<Venue>& VenueManager::getVenues() {
+    return venues;
+}
+
+bool VenueManager::isValidVenueFormat(const string& input) const {
     if (input.size() < 2 || toupper(input[0]) != 'V') {
         return false;
     }
@@ -198,7 +202,7 @@ bool isValidVenueFormat(const string& input) {
 }
 
 // Validate venue selection - Your input validation
-string validateVenueSelection() {
+string VenueManager::validateVenueSelection() const {
     string input;
     bool validInput = false;
 
@@ -241,7 +245,7 @@ string validateVenueSelection() {
     return input;
 }
 
-string validateBookedVenueSelection() {
+string VenueManager::validateBookedVenueSelection() const {
     string input;
  
     bool validInput = false;
