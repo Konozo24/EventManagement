@@ -6,11 +6,10 @@
 #include <sstream>
 using namespace std;
 
-vector<Event> events;
 
 
 
-void loadEventsFromFile() {
+void EventManager::loadEventsFromFile() {
     ifstream file(EVENTS_FILE);
     if (!file.is_open()) {
         cout << "No events found. A new event file will be created when saving.\n";
@@ -47,7 +46,7 @@ void loadEventsFromFile() {
     file.close();
 }
 
-void saveEventsToFile() {
+void EventManager::saveEventsToFile() {
     ofstream file(EVENTS_FILE);
     if (!file.is_open()) {
         cout << "Error saving events to file.\n";
@@ -67,7 +66,7 @@ void saveEventsToFile() {
     file.close();
 }
 
-void displayEvents() {
+void EventManager::displayEvents() {
     if (events.empty()) {
         cout << "No events available.\n";
         return;
@@ -84,7 +83,7 @@ void displayEvents() {
     }
 }
 
-void displayEventsForRegistration() {
+void EventManager::displayEventsForRegistration() {
     cout << "\n" << string(80, '=') << endl;
     cout << "                      AVAILABLE EVENTS" << endl;
     cout << string(80, '=') << endl;
@@ -116,7 +115,7 @@ void displayEventsForRegistration() {
     cout << string(80, '=') << endl;
 }
 
-Event* findEventByName(const string& name) {
+Event* EventManager::findEventByName(const string& name) {
     for (auto& ev : events) {
         if (ev.eventName == name) {
             return &ev;
@@ -125,7 +124,7 @@ Event* findEventByName(const string& name) {
     return nullptr; // Not found
 }
 
-Event* findEventByID(const string& eventID) {
+Event* EventManager::findEventByID(const string& eventID) {
     for (auto& e : events) {
         if (e.eventID == eventID) {
             return &e;  
