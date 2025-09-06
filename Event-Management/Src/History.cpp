@@ -3,7 +3,9 @@
 
 // ========== EXISTING CODE (slightly cleaned up) ==========
 void viewUserHistory(const string& guestID) {
-    loadRegistrationFromFile();
+	RegistrationManager regManager;
+
+    regManager.loadRegistrationFromFile();
 
     cout << "\n" << string(50, '=') << endl;
     cout << "        EVENT HISTORY FOR GUEST: " << guestID << endl;
@@ -63,7 +65,7 @@ void viewUserHistory(const string& guestID) {
     bool found = false;
     bool headerPrinted = false;
 
-    for (const auto& reg : registrations) {
+    for (const auto& reg : regManager.getRegistrations()) {
         if (reg.guestID == guestID) {
             if (!headerPrinted) {
                 cout << left << setw(8) << "RegID"
@@ -129,19 +131,21 @@ void viewUserHistory(const string& guestID) {
 
 // ========== NEW CODE FOR ADMIN ==========
 void viewAllHistory() {
-    loadRegistrationFromFile();
+	RegistrationManager regManager;
+
+    regManager.loadRegistrationFromFile();
 
     cout << "\n" << string(50, '=') << endl;
     cout << "        FULL EVENT HISTORY (ADMIN)" << endl;
     cout << string(50, '=') << endl << endl;
 
-    if (registrations.empty()) {
+    if (regManager.getRegistrations().empty()) {
         cout << "No registration records found.\n";
         return;
     }
 
     // Print all guest histories (no filtering)
-    for (const auto& reg : registrations) {
+    for (const auto& reg : regManager.getRegistrations()) {
         cout << "Guest ID: " << reg.guestID << endl;
         cout << "Registration ID: " << reg.registrationID << endl;
         cout << "Event: " << reg.eventName << " on " << reg.eventDate << endl;
