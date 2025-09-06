@@ -42,6 +42,9 @@ bool getValidatedInt(const string& prompt, int min, int max, int& value) {
 
 // ===== Main: Submit feedback =====
 void submitFeedback() {
+	RegistrationManager regManager;
+	GuestManager guestManager;
+
     string guestID, name, eventName, comment;
     int rating;
 
@@ -60,16 +63,16 @@ void submitFeedback() {
     getline(cin, name);
 
     // Verify Guest ID + Name
-    loadGuestsFromFile();
-    if (!verifyGuest(guestID, name)) {
+    guestManager.loadGuestsFromFile();
+    if (!guestManager.verifyGuest(guestID, name)) {
         cout << "Guest ID and Name do not match our records.\n";
         return;
     }
 
     // Load this guest’s registrations
-    loadRegistrationFromFile();
+    regManager.loadRegistrationFromFile();
     vector<Registration> guestRegs;
-    for (const auto& reg : registrations) {
+    for (const auto& reg : regManager.getRegistrations()) {
         if (reg.guestID == guestID) {
             guestRegs.push_back(reg);
         }
