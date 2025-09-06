@@ -10,7 +10,6 @@
 #include <iomanip>
 using namespace std;
 
-vector<Registration> registrations;
 static int nextRegistrationID = 1; // auto increment counter
 
 // Constructors
@@ -28,7 +27,7 @@ Registration::Registration(const string& regId, const string& evId, const string
 }
 
 
-void loadRegistrationFromFile() {
+void RegistrationManager::loadRegistrationFromFile() {
     ifstream file(REGISTRATION_FILE);
     if (!file.is_open()) {
         // File doesn't exist yet
@@ -75,7 +74,7 @@ void loadRegistrationFromFile() {
     nextRegistrationID = maxID + 1;
 }
 
-void saveRegistrationToFile() {
+void RegistrationManager::saveRegistrationToFile() {
     ofstream file(REGISTRATION_FILE);
     for (const auto& reg : registrations) {
         file << reg.registrationID << "|"
@@ -93,7 +92,7 @@ void saveRegistrationToFile() {
     file.close();
 }
 
-void displayRegistration() {
+void RegistrationManager::displayRegistration() const {
     cout << "\n" << string(80, '=') << endl;
     cout << "                   REGISTRATIONS" << endl;
     cout << string(80, '=') << endl;
@@ -126,13 +125,13 @@ void displayRegistration() {
     cout << string(100, '=') << endl;
 }
 
-string generateRegistrationID() {
+string RegistrationManager::generateRegistrationID() {
 
     string id = "R" + to_string(nextRegistrationID++);
     return id;
 }
 
-string validateRegistrationIDInput() {
+string RegistrationManager::validateRegistrationIDInput() const {
     string regID;
     bool valid = false;
 
