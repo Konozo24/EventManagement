@@ -11,8 +11,6 @@
 using namespace std;
 
 
-vector<Guest> guests;
-
 Guest::Guest() : guestID("0"), name(""), eventName(""){}
 Guest::Guest(const string& id, const string& guestName, const string& event)
     : guestID(id), name(guestName), eventName(event) { }
@@ -20,7 +18,7 @@ Guest::Guest(const string& id, const string& guestName, const string& event)
 
 
 // Load guests from guest file
-void loadGuestsFromFile() {
+void GuestManager::loadGuestsFromFile() {
     ifstream file(GUESTS_FILE);
     if (!file.is_open()) {
         return; // File doesn't exist yet
@@ -51,7 +49,7 @@ void loadGuestsFromFile() {
 }
 
 // Save guests to file
-void saveGuestsToFile() {
+void  GuestManager::saveGuestsToFile() {
     ofstream file(GUESTS_FILE);
     if (!file.is_open()) {
         cout << "Error saving guests to file.\n";
@@ -70,7 +68,7 @@ void saveGuestsToFile() {
 
 
 // Validate guest ID input
-string validateGuestIDInput() {
+string  GuestManager::validateGuestIDInput() {
     string guestID;
     bool validInput = false;
 
@@ -101,7 +99,7 @@ string validateGuestIDInput() {
 }
 
 // Verify if Guest ID and Name match an existing guest
-bool verifyGuest(const string& guestID, const string& name) {
+bool  GuestManager::verifyGuest(const string& guestID, const string& name) {
     for (const auto& guest : guests) {
         if (guest.guestID == guestID && guest.name == name) {
             return true;
@@ -110,7 +108,7 @@ bool verifyGuest(const string& guestID, const string& name) {
     return false;
 }
 
-string generateGuestID() {
+string GuestManager::generateGuestID() {
     loadGuestsFromFile();
     int nextID = 1;
     if (!guests.empty()) {
@@ -124,7 +122,7 @@ string generateGuestID() {
     return "G" + to_string(nextID);
 }
 
-Guest* findGuestByID(const string& id) {
+Guest* GuestManager::findGuestByID(const string& id) {
     for (auto& g : guests) {
         if (g.guestID == id) {
             return &g;
