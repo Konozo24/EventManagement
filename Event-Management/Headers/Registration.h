@@ -25,22 +25,28 @@ struct Registration {
         int tickets, double cost, bool checkedIn = false, const string& checkInTime = "");
 };
 
-extern vector<Registration> registrations;
+class RegistrationManager {
+private:
+    vector<Registration> registrations;
 
-// File handling
-void loadRegistrationFromFile();
-void saveRegistrationToFile();
+public:
 
-// Display
-void displayRegistration();
+    // File handling
+    void loadRegistrationFromFile();
+    void saveRegistrationToFile();
 
-// GenerateID
-string generateRegistrationID();
+    // Display
+    void displayRegistration() const;
 
+    // GenerateID
+    string generateRegistrationID();
 
+    //Validation
+    string validateRegistrationIDInput() const;
 
-//Validation
-string validateRegistrationIDInput();
+    // Accessors
+    vector<Registration>& getRegistrations() { return registrations; }
+};
 
 
 #endif
