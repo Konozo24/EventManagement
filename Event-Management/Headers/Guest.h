@@ -18,18 +18,26 @@ struct Guest {
  
 };
 
-// Declare global guest list
-extern vector<Guest> guests;
+class GuestManager {
+private:
+    vector<Guest> guests;
 
-// Guest utilities
-void loadGuestsFromFile();
-void saveGuestsToFile();
+public:
 
-string validateGuestIDInput();
-string generateGuestID();
+    // File handling
+    void loadGuestsFromFile();
+    void saveGuestsToFile();
 
-// Extra utilities (for Payment & Feedback)
-bool verifyGuest(const string& guestID, const string& name);
-Guest* findGuestByID(const string& id);
+    // Validation
+    string validateGuestIDInput();
+    string generateGuestID();
+
+    // Extra utilities (for Payment & Feedback)
+    bool verifyGuest(const string& guestID, const string& name);
+    Guest* findGuestByID(const string& id);
+
+    // Accessor
+    vector<Guest>& getGuests() { return guests; }
+};
 
 #endif
