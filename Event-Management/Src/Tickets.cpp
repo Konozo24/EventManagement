@@ -15,11 +15,15 @@ using namespace std;
 
 
 void tickets() {
-    loadEventsFromFile();
+	RegistrationManager regManager;
+	EventManager eventManager;
+	GuestManager guestManager;
+
+    eventManager.loadEventsFromFile();
     Event* ev = nullptr;
     string eventName, userName, guestID;
 
-	displayEventsForRegistration();
+    eventManager.displayEventsForRegistration();
 
   
     do {
@@ -31,7 +35,7 @@ void tickets() {
             return;
         }
 
-        ev = findEventByName(eventName);   
+        ev = eventManager.findEventByName(eventName);
         if (!ev) cout << "Invalid event name! Please try again.\n";
             
     } while (!ev);
@@ -100,8 +104,8 @@ void tickets() {
             cout << "Enter your Guest ID: ";
             getline(cin, guestID);
 
-            loadGuestsFromFile();
-            Guest* existingGuest = findGuestByID(guestID);
+            guestManager.loadGuestsFromFile();
+            Guest* existingGuest = guestManager.findGuestByID(guestID);
             if (existingGuest) {
                 // Check if entered name matches the Guest ID
                 if (existingGuest->name != userName) {
@@ -111,15 +115,15 @@ void tickets() {
                     string choice;
                     getline(cin, choice);
                     if (choice == "new" || choice == "NEW") {
-                        guestID = generateGuestID();
+                        guestID = guestManager.generateGuestID();
                         cout << "Your new Guest ID is: " << guestID << endl;
                         cout << "\nPress Enter to continue...";
                         cin.get();
                         clearScreen();
 
                         Guest newGuest(guestID, userName, ev->eventName);
-                        guests.push_back(newGuest);
-                        saveGuestsToFile();
+                        guestManager.getGuests().push_back(newGuest);
+                        guestManager.saveGuestsToFile();
                         validGuest = true;
                     }
                 }
@@ -134,15 +138,15 @@ void tickets() {
                 string choice;
                 getline(cin, choice);
                 if (choice == "new" || choice == "NEW") {
-                    guestID = generateGuestID();
+                    guestID = guestManager.generateGuestID();
                     cout << "Your new Guest ID is: " << guestID << endl;
                     cout << "\nPress Enter to continue...";
                     cin.get();
                     clearScreen();
 
                     Guest newGuest(guestID, userName, "");
-                    guests.push_back(newGuest);
-                    saveGuestsToFile();
+                    guestManager.getGuests().push_back(newGuest);
+                    guestManager.saveGuestsToFile();
                     validGuest = true;
                 }
             }
@@ -150,22 +154,22 @@ void tickets() {
     }
     else {
         // New guest directly
-        guestID = generateGuestID();
+        guestID = guestManager.generateGuestID();
         cout << "Your new Guest ID is: " << guestID << endl;
         cout << "\nPress Enter to continue...";
         cin.get();
         clearScreen();
 
         Guest newGuest(guestID, userName, "");
-        guests.push_back(newGuest);
-        saveGuestsToFile();
+        guestManager.getGuests().push_back(newGuest);
+        guestManager.saveGuestsToFile();
     }
 
     // --- Check if this guest already registered for the event ---
-    loadRegistrationFromFile();
+    regManager.loadRegistrationFromFile();
     bool alreadyRegistered = false;
 
-    for (const auto& r : registrations) {
+    for (const auto& r : regManager.getRegistrations()) {
         if (r.guestID == guestID && r.eventID == ev->eventID) {
             alreadyRegistered = true;
             break;
@@ -183,12 +187,12 @@ void tickets() {
 
     // Deduct tickets
     ev->ticketAmount -= ticketsRequested;
-    saveEventsToFile();   // update event list with reduced tickets
+    eventManager.saveEventsToFile();   // update event list with reduced tickets
 
     // When registering a user
-    loadRegistrationFromFile(); // make sure nextRegistrationID is correct
+    regManager.loadRegistrationFromFile(); // make sure nextRegistrationID is correct
     // Generate Registration ID
-    string newRegID = generateRegistrationID(); // "R#" auto-generated
+    string newRegID = regManager.generateRegistrationID(); // "R#" auto-generated
 
     
 
@@ -213,8 +217,8 @@ void tickets() {
     processPayment(newReg, ev);
 
     // Save to file
-    registrations.push_back(newReg);
-    saveRegistrationToFile();
+    regManager.getRegistrations().push_back(newReg);
+    regManager.saveRegistrationToFile();
 
     // Display confirmation
     clearScreen();
