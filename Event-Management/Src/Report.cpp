@@ -12,12 +12,13 @@
 
 // Load Venues
 void Report::loadVenues(const string& filename) {
+    VenueManager venueManager;
     // Make sure global venues are loaded
-    loadVenuesFromFile();
+    venueManager.loadVenuesFromFile();
 
     // Clear and rebuild venueMap
     venueMap.clear();
-    for (const auto& v : venues) {
+    for (const auto& v : venueManager.getVenues()) {
         venueMap[v.venueID] = v.name;
     }
     
@@ -50,10 +51,12 @@ void Report::loadEvents(const string& filename) {
 }
 
 void Report::loadRegistration(const string& filename) {
-    loadRegistrationFromFile();
+	RegistrationManager regManager;
+
+    regManager.loadRegistrationFromFile();
     summaries.clear();
 
-    for (const auto& reg : registrations) {
+    for (const auto& reg : regManager.getRegistrations()) {
         string fullEventName = reg.eventName + " (" + reg.eventID + ")";
 
         // Check if this event is already in summaries
@@ -78,8 +81,10 @@ void Report::loadRegistration(const string& filename) {
 }
 
 void Report::loadGuests() {
+	RegistrationManager regManager;
+	GuestManager guestManager;
     // Ensure global guest list is loaded
-    loadGuestsFromFile();
+    guestManager.loadGuestsFromFile();
 
     // Reset summary counts first
     for (auto& s : summaries) {
@@ -88,7 +93,7 @@ void Report::loadGuests() {
     }
 
     // Count based on loaded guests
-    for (const auto& reg : registrations) {
+    for (const auto& reg : regManager.getRegistrations()) {
         string fullEventName = reg.eventName + " (" + reg.eventID + ")";
         for (auto& s : summaries) {
             if (s.eventName == fullEventName) {
@@ -123,9 +128,10 @@ void Report::displaySummary() {
     }
 }
 
-void Report::displayAttendance() {
-    loadRegistrationFromFile();
-    loadGuestsFromFile();
+void Report::displayAttendance(RegistrationManager& regManager, GuestManager& guestManager) {
+	
+    regManager.loadRegistrationFromFile();
+    guestManager.loadGuestsFromFile();
 
     cout << "\nAttendance Report:\n";
     cout << left << setw(10) << "RegID"
@@ -137,8 +143,8 @@ void Report::displayAttendance() {
         << setw(25) << "Time" << endl;
     cout << string(115, '-') << endl;
 
-    for (const auto& reg : registrations) {
-        Guest* g = findGuestByID(reg.guestID);
+    for (const auto& reg : regManager.getRegistrations()) {
+        Guest* g = guestManager.findGuestByID(reg.guestID);
         cout << left << setw(10) << reg.registrationID
             << setw(10) << reg.guestID
             << setw(20) << (g ? g->name : "(Unknown)")
@@ -151,7 +157,8 @@ void Report::displayAttendance() {
 }
 
 void Report::displayVenueStats() {
-    loadVenuesFromFile();
+	VenueManager venueManager;
+    venueManager.loadVenuesFromFile();
     cout << "\nVenue Usage Statistics:\n";
     cout << left << setw(10) << "VenueID"
         << setw(35) << "Venue Name"
@@ -161,7 +168,7 @@ void Report::displayVenueStats() {
         << setw(15) << "Usage Count" << endl;
     cout << string(90, '-') << endl;
 
-    for (const auto& v : venues) {
+    for (const auto& v : venueManager.getVenues()) {
         cout << left << setw(10) << v.venueID
             << setw(35) << v.name
             << setw(10) << v.capacity
@@ -203,6 +210,9 @@ void Report::generateReport() {
 }
 
 void Report::displayReportMenu() {
+	RegistrationManager regManager;
+	GuestManager guestManager;
+
     loadVenues("venues.txt");
     loadEvents("events.txt");
     loadRegistration("registration.txt");
@@ -227,7 +237,7 @@ void Report::displayReportMenu() {
             break;
 
         case 2: {
-			displayAttendance();
+			displayAttendance(regManager, guestManager);
             break;
         }
 
