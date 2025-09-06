@@ -13,12 +13,14 @@
 
 using namespace std;
 
-void displayCheckInStatistics() {
-    loadRegistrationFromFile();
-    int totalRegistrations = registrations.size();
+void displayCheckInStatistics(RegistrationManager& regManager) {
+	
+
+    regManager.loadRegistrationFromFile();
+    int totalRegistrations = regManager.getRegistrations().size();
     int checkedInCount = 0;
 
-    for (const auto& reg : registrations) {
+    for (const auto& reg : regManager.getRegistrations()) {
         if (reg.checkedIn) checkedInCount++;
     }
 
@@ -32,16 +34,16 @@ void displayCheckInStatistics() {
 }
 
 // Display all registered guests per event
-void displayRegisteredGuests() {
-    loadRegistrationFromFile();
-    loadGuestsFromFile();
-    loadEventsFromFile();
+void displayRegisteredGuests(RegistrationManager& regManager, EventManager& eventManager, GuestManager& guestManager) {
+    regManager.loadRegistrationFromFile();
+    guestManager.loadGuestsFromFile();
+    eventManager.loadEventsFromFile();
 
     cout << "\n" << string(100, '=') << endl;
     cout << "                REGISTERED GUESTS (All Events)" << endl;
     cout << string(100, '=') << endl;
 
-    if (registrations.empty()) {
+    if (regManager.getRegistrations().empty()) {
         cout << "No registrations found.\n";
         cout << string(100, '=') << endl;
         return;
@@ -56,9 +58,9 @@ void displayRegisteredGuests() {
         << setw(25) << "Check-in Time" << endl;
     cout << string(100, '-') << endl;
 
-    for (const auto& reg : registrations) {
-        Guest* g = findGuestByID(reg.guestID);
-        Event* e = findEventByID(reg.eventID);
+    for (const auto& reg : regManager.getRegistrations()) {
+        Guest* g = guestManager.findGuestByID(reg.guestID);
+        Event* e = eventManager.findEventByID(reg.eventID);
 
         cout << left << setw(8) << reg.registrationID
             << setw(10) << reg.guestID
@@ -73,29 +75,31 @@ void displayRegisteredGuests() {
     cout << string(100, '=') << endl;
 }
 
-void markVenueAsAvailable() {
-    loadVenuesFromFile();
-    loadEventsFromFile();
+void markVenueAsAvailable(VenueManager& venueManager, EventManager& eventManager) {
+	  
 
-    if (venues.empty()) {
+    venueManager.loadVenuesFromFile();
+    eventManager.loadEventsFromFile();
+
+    if (venueManager.getVenues().empty()) {
         cout << "No venues found.\n";
         return;
     }
 
-    displayAllVenues();
+    venueManager.displayAllVenues();
 
     string venueID;
     bool success = false;
 
     do {
-        venueID = validateBookedVenueSelection(); // returns 0 if user cancels
+        venueID = venueManager.validateBookedVenueSelection(); // returns 0 if user cancels
         if (venueID == "0") {
             cout << "Cancelled. Returning to menu...\n";
             return;
         }
 
         // Find the venue
-        for (auto& venue : venues) {
+        for (auto& venue : venueManager.getVenues()) {
             if (venue.venueID == venueID) {
                 if (!venue.isBooked) {
                     cout << "Venue " << venue.name << " is already available.\n";
@@ -104,14 +108,14 @@ void markVenueAsAvailable() {
                     venue.isBooked = false; // mark as available
 
                     
-                    events.erase(
-                        remove_if(events.begin(), events.end(),
+                    eventManager.getEvents().erase(
+                        remove_if(eventManager.getEvents().begin(), eventManager.getEvents().end(),
                             [&](const Event& ev) { return ev.venueID == venueID; }),
-                        events.end()
+                        eventManager.getEvents().end()
                     );
 
-                    saveVenuesToFile();
-                    saveEventsToFile();
+                    venueManager.saveVenuesToFile();
+                    eventManager.saveEventsToFile();
 
                     cout << "Venue " << venue.name << " has been marked as available.\n";
                     cout << "Associated events using this venue have been removed.\n";
@@ -130,17 +134,22 @@ void markVenueAsAvailable() {
 
 // MAIN FUNCTION: Event Monitoring
 void monitorEvent() {
+	RegistrationManager regManager;
+	EventManager eventManager;
+	VenueManager venueManager;
+	GuestManager guestManager;
+
     int choice;
 
     do {
         clearScreen();
 
-        loadGuestsFromFile();
-        loadEventsFromFile();
-        loadRegistrationFromFile();
+        guestManager.loadGuestsFromFile();
+        eventManager.loadEventsFromFile();
+        regManager.loadRegistrationFromFile();
 
         // Display current guest status
-        displayRegisteredGuests();
+        displayRegisteredGuests(regManager, eventManager, guestManager);
 
         // Show menu
         cout << "\nEvent Monitoring Options:" << endl;
@@ -164,16 +173,16 @@ void monitorEvent() {
 
         switch (choice) {
         case 1: {
-            string regID = validateRegistrationIDInput();
+            string regID = regManager.validateRegistrationIDInput();
             if (regID == "0") break;  // user cancelled
 
             bool found = false;
-            for (auto& reg : registrations) {
+            for (auto& reg : regManager.getRegistrations()) {
                 if (reg.registrationID == regID) {
                     found = true;
 
-                    Guest* g = findGuestByID(reg.guestID);
-                    Event* e = findEventByID(reg.eventID);
+                    Guest* g = guestManager.findGuestByID(reg.guestID);
+                    Event* e = eventManager.findEventByID(reg.eventID);
 
                     if (!e) {
                         cout << "\nCannot check in. The event for this registration no longer exists (venue was freed).\n";
@@ -195,7 +204,7 @@ void monitorEvent() {
                         if (!reg.checkInTime.empty() && reg.checkInTime.back() == '\n')
                             reg.checkInTime.pop_back();
 
-                        saveRegistrationToFile();
+                        regManager.saveRegistrationToFile();
 
                         cout << "\n" << string(50, '*') << endl;
                         cout << "CHECK-IN SUCCESSFUL!" << endl;
@@ -226,7 +235,7 @@ void monitorEvent() {
             break;
 
         case 3:
-            displayCheckInStatistics();
+            displayCheckInStatistics(regManager);
             cout << "\nPress Enter to continue...";
             cin.get();
             break;
@@ -234,7 +243,7 @@ void monitorEvent() {
         case 4:
             // Mark venue as available
             clearScreen();
-            markVenueAsAvailable();
+            markVenueAsAvailable(venueManager, eventManager);
             cout << "\nPress Enter to continue...";
             cin.get();
             break;
