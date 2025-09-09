@@ -45,7 +45,9 @@ void printAdminMenu() {
     cout << "  5. View Feedbacks (Admin)\n";
     cout << "  6. Event Reporting\n";
     cout << "  7. Marketing (Admin)\n";
-    cout << "  8. Admin Logout\n";
+	cout << "  8. View Event History\n";
+    cout << "  9. Admin Logout\n";
+	cout << "  0. Return back to main menu\n";
 
     cout << string(60, '-') << endl;
     cout << "Enter your choice: ";
@@ -159,15 +161,16 @@ int main() {
                 case 7: 
                     marketManager.marketingAdmin();
                     break;
-                case 8:
+				case 8:
+					adminHistoryMenu();
+					break;
+                case 9:
                     adminLogout();
                     adminChoice = 0;
                     break;
-
                 case 0:
                     cout << "Returning to Main Menu...\n";
                     break;
-
                 default:
                     cout << "Invalid choice! Try again.\n";
                     break;
